@@ -33,8 +33,10 @@ services:
       timeout: 3s
       retries: 10
 
+  # MinIO stopped publishing minio/minio and minio/mc on Docker Hub and quay.io,
+  # so these are Chainguard's maintained builds of the same open-source MinIO.
   minio:
-    image: quay.io/minio/minio:latest
+    image: chainguard/minio:latest
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: syntropy
@@ -44,24 +46,16 @@ services:
       - "9001:9001" # web console: http://localhost:9001
     volumes:
       - miniodata:/data
-    healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
 
-  # Creates the private uploads bucket once MinIO is up, then exits.
+  # Creates the private uploads bucket, then exits. Retries until MinIO accepts connections.
   minio-init:
-    image: quay.io/minio/mc:latest
+    image: chainguard/minio-client:latest
+    command: ["mb", "--ignore-existing", "local/syntropy-uploads"]
+    environment:
+      MC_HOST_local: http://syntropy:syntropy-dev-secret@minio:9000
+    restart: on-failure:10
     depends_on:
-      minio:
-        condition: service_healthy
-    entrypoint: >
-      /bin/sh -c "
-      mc alias set local http://minio:9000 syntropy syntropy-dev-secret &&
-      mc mb --ignore-existing local/syntropy-uploads &&
-      mc anonymous set none local/syntropy-uploads
-      "
+      - minio
 
   backend:
     profiles: ["app"]

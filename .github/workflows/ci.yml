@@ -92,7 +92,8 @@ jobs:
       - name: Infrastructure services start and become healthy
         run: |
           docker compose up -d --wait --wait-timeout 120 db redis minio
-          docker compose run --rm minio-init
+          for i in $(seq 1 15); do docker compose run --rm minio-init && exit 0; sleep 2; done
+          exit 1
       - name: Show service logs on failure
         if: failure()
         run: docker compose logs
