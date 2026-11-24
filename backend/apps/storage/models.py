@@ -151,3 +151,26 @@ class UniqueValue(models.Model):
 
     def __str__(self) -> str:
         return f"{self.table_id}.{self.field_id} = {self.value_key}"
+
+
+class FieldRules(models.Model):
+    """One table's field rules in one published schema version, compiled by the database.
+
+    A trigger fills this table when a version is published (migration 0004), and the trigger
+    on ``business_records`` checks every write against it. Nothing in Python writes here.
+    """
+
+    pk = models.CompositePrimaryKey("schema_version", "table_id")
+    schema_version = models.ForeignKey(SchemaVersion, on_delete=models.CASCADE, related_name="+")
+    table_id = models.CharField(max_length=ID_LENGTH)
+    # {"fld_x": true, ...}: the scalar fields a record of this table may hold.
+    allowed = models.JSONField()
+    # [{"id", "type", "required", "options"?, "max_length"?, "min"?, "max"?, "scale"?,
+    #   "precision"?}, ...] for the same fields.
+    fields = models.JSONField()
+
+    class Meta:
+        db_table = "storage_field_rules"
+
+    def __str__(self) -> str:
+        return f"rules for {self.table_id} in {self.schema_version_id}"

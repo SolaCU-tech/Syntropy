@@ -489,14 +489,13 @@ class Benchmark:
             Check(
                 "Database refuses a wrong type when the app is bypassed",
                 *self._both(self._db_rejects_wrong_type),
-                "JSONB stores whatever valid JSON it is given",
+                "JSONB: a trigger checks values against the published schema",
             )
         )
         c.append(
             Check(
                 "Database refuses a missing required value when the app is bypassed",
                 *self._both(self._db_rejects_missing_required),
-                "JSONB can't know which keys a table requires",
             )
         )
         self._concurrent_inserts()
@@ -789,12 +788,15 @@ class Benchmark:
             )
 
         def jsonb_backfill():
-            publish(add_required)
+            version = publish(add_required)
+            # Records move to the new version as they're filled (the database checks each
+            # row against the rules of the version it names).
             _fetch_none(
                 'UPDATE business_records SET data = data || \'{"fld_sale_channel": "shop"}\','
-                " version = version + 1 WHERE workspace_id = %s AND table_id = 'tbl_sales'"
+                " version = version + 1, schema_version_id = %s"
+                " WHERE workspace_id = %s AND table_id = 'tbl_sales'"
                 " AND NOT data ? 'fld_sale_channel'",
-                [workspace.pk],
+                [version.pk, workspace.pk],
             )
 
         t_j, _ = _time(jsonb_backfill)

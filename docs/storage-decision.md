@@ -11,7 +11,7 @@ MVP). Schema-per-workspace tables (ADR-09) stay as the fallback behind the stora
 and the benchmark is re-run in Phase 5 with real data volumes.
 
 Decided by Sola on 24 November 2026, after a follow-up experiment measured the type checks
-(below). The trigger ships in its own PR.
+(below).
 
 ## What was compared
 
@@ -30,12 +30,12 @@ workspaces of 500 sales each) through the same validation code on PostgreSQL 16:
 | Question | JSONB | Physical | Who wins |
 | --- | --- | --- | --- |
 | Correctness through the app (links, cross-workspace, wrong table, unique races, delete policies, concurrent edits, exact totals) | all pass | all pass | tie |
-| Database refuses a wrong type or missing required value when the app is bypassed | no | yes | physical |
+| Database refuses a wrong type or missing required value when the app is bypassed | yes, via a trigger | yes, natively | tie since the trigger landed |
 | Reports on one 10k-sale workspace (monthly totals, who owes me, top products) | 13–24 ms | 3–7 ms | physical, 2–9x |
 | Lookups (by phone, a customer's sales, a table page) | under 1 ms | under 1 ms | tie in practice |
 | Import 10,000 sales | 3.0 s | 1.1 s | physical, about 3x |
 | Single creates, 8 writers at once | about 310/s | about 1,100/s | physical (partly Django ORM vs raw SQL) |
-| Add a field / make a field unique on 10k rows | 16–370 ms | 1–21 ms | physical |
+| Add a field / make a field unique on 10k rows | 16–950 ms | 1–21 ms | physical |
 | Provision 100 workspaces | 1.6 s | 3.0 s | JSONB |
 | Database objects per workspace | 0 | 18 | JSONB |
 | Disk for the same data | about 2–4x more | less | physical |
@@ -57,14 +57,17 @@ workspaces of 500 sales each) through the same validation code on PostgreSQL 16:
 
 ## What JSONB costs us, and the mitigations
 
-* **No database-side type or required-field checks, until the follow-up trigger lands.** The
-  app validates every write, and the database already enforces the shape (flat object, `fld_`
-  keys, scalars only), identity, links, cardinality and uniqueness. The agreed fix is a
-  validation trigger compiled from each published schema version. A prototype refused wrong
-  types, missing required values, invalid enum values and out-of-range numbers. It left report
-  times unchanged (reads don't run it), made a 10,000-sale import 5–20% slower, and made single
-  creates no slower. Single edits went from about 4 ms to 9–11 ms; the follow-up PR investigates
-  that.
+* **Type checks in the database are hand-built, not native.** A trigger (storage migration
+  0004) compiles each table's rules when a schema version is published and checks every
+  insert, and every update that changes a record's data or schema version, against the rules of
+  the version the record names. It refuses unknown fields, missing required values, wrong
+  types, non-canonical decimals and dates, invalid enum values and out-of-range numbers, so
+  both designs now pass every correctness check. Measured cost: reports are unchanged (reads
+  don't run it). A 10,000-sale import took 3.1 s with the trigger against 3.0 s without, which
+  is within run-to-run noise. Single creates and edits stayed at about 4 ms each with the
+  trigger switched on and off on the same data. A full-table backfill, such as adding a required
+  field with a default, is about 2.5x slower (950 ms for 10,000 rows), because every
+  rewritten row is checked. The earlier prototype's slower edits did not reproduce.
 * **Reports are 2–9x slower.** Add expression indexes on hot JSONB fields only when query
   plans justify them (spec section 9), and revisit at Phase 5.
 * **Stale planner statistics hurt more on one big shared table.** The benchmark found that
