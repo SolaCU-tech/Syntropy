@@ -265,7 +265,7 @@ The SSD is the canonical, versioned JSON description of a workspace's structure,
 
 The first prototype stores business records as JSONB rows with relational link rows (ADR-08, agreed for the MVP after the Phase 2 benchmark), behind a storage adapter that can later switch to real per-tenant tables.
 
-**Provisional JSONB-relational hybrid** (SRS §7.1). Platform metadata lives in ordinary tables. Each business record is one row in a shared `business_records` table: immutable record UUID, `workspace_id`, logical `table_id`, JSONB scalar values, version number and timestamps. Links live authoritatively in a relational `record_relationships` table. Never store a whole business database as one JSON document.
+**JSONB-relational hybrid** (SRS §7.1). Platform metadata lives in ordinary tables. Each business record is one row in a shared `business_records` table: immutable record UUID, `workspace_id`, logical `table_id`, JSONB scalar values, version number and timestamps. Links live authoritatively in a relational `record_relationships` table. Never store a whole business database as one JSON document.
 
 **Core entities** (SRS §7.2): organizations, memberships, workspaces, schema\_versions, logical\_tables, field\_definitions, relationship\_definitions, business\_records, record\_relationships, unique\_values (if the registry approach is chosen), source\_files, import\_jobs, import\_mappings, query\_definitions, report\_definitions, form\_definitions, schema\_change\_proposals, audit\_events. New for this design: insight\_definitions, dashboards, review\_items (uncertainties awaiting a decision), sync\_batches (offline uploads, with idempotency keys), notifications.
 
