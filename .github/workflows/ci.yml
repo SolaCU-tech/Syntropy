@@ -81,9 +81,18 @@ jobs:
         run: npm run build
 
   compose:
-    name: Docker Compose config is valid
+    name: Docker Compose (config, pull, start)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: docker compose config --quiet
       - run: docker compose --profile app config --quiet
+      - name: Every image in docker-compose.yml can be pulled
+        run: docker compose pull
+      - name: Infrastructure services start and become healthy
+        run: |
+          docker compose up -d --wait --wait-timeout 120 db redis minio
+          docker compose run --rm minio-init
+      - name: Show service logs on failure
+        if: failure()
+        run: docker compose logs
