@@ -65,7 +65,9 @@
   --color-ai: var(--syn-ai);
   --color-ai-soft: var(--syn-ai-soft);
   --color-success: var(--syn-success);
+  --color-success-text: var(--syn-success-text);
   --color-warning: var(--syn-warning);
+  --color-warning-text: var(--syn-warning-text);
   --color-danger: var(--syn-danger);
   --color-chart-1: var(--syn-chart-1);
   --color-chart-2: var(--syn-chart-2);

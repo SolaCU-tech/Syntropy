@@ -40,23 +40,27 @@ describe('design tokens', () => {
       surface: token('surface'),
       border: token('border'),
       success: token('success'),
+      'success-text': token('success-text'),
       warning: token('warning'),
+      'warning-text': token('warning-text'),
       danger: token('danger'),
     }).toEqual({
       primary: '#0e7c6b',
       'primary-hover': '#0a6658',
       'primary-soft': '#e6f4f1',
-      ai: '#6d5bd0',
+      ai: '#6957cf',
       'ai-soft': '#efecfb',
       ink: '#0f1b2d',
       'text-secondary': '#526077',
-      'text-muted': '#8a94a6',
+      'text-muted': '#667186',
       canvas: '#f7f8fa',
       surface: '#ffffff',
       border: '#e3e7ed',
       success: '#1f9d55',
+      'success-text': '#1a8146',
       warning: '#d99a0b',
-      danger: '#d64545',
+      'warning-text': '#936807',
+      danger: '#d23434',
     })
   })
 
@@ -76,6 +80,16 @@ describe('design tokens', () => {
     ['primary link on surface', 'primary', 'surface'],
     ['primary link on canvas', 'primary', 'canvas'],
     ['AI violet on surface', 'ai', 'surface'],
+    ['AI violet on AI soft', 'ai', 'ai-soft'],
+    ['muted text on surface', 'text-muted', 'surface'],
+    ['muted text on canvas', 'text-muted', 'canvas'],
+    ['success text on surface', 'success-text', 'surface'],
+    ['success text on canvas', 'success-text', 'canvas'],
+    ['warning text on surface', 'warning-text', 'surface'],
+    ['warning text on canvas', 'warning-text', 'canvas'],
+    ['danger text on surface', 'danger', 'surface'],
+    ['danger text on canvas', 'danger', 'canvas'],
+    ['white text on danger button', 'surface', 'danger'],
   ])('%s meets WCAG AA for body text (4.5:1)', (_label, fg, bg) => {
     expect(contrast(token(fg), token(bg))).toBeGreaterThanOrEqual(4.5)
   })

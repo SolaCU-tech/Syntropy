@@ -1,6 +1,7 @@
 /*
  * Syntropy design tokens — spec section 14 (ADR-15, ADR-22).
  * The light theme values are the spec's and must not change without updating the spec.
+ * Contrast-adjusted on 24 Nov 2026 (muted, danger, AI violet; new success/warning text tokens).
  * Dark tokens are defined now and shipped later (ADR-22); their values are a first draft.
  *
  * Rules worth remembering:
@@ -17,23 +18,26 @@
   --syn-on-primary: #ffffff;
 
   /* AI-only */
-  --syn-ai: #6d5bd0;
+  --syn-ai: #6957cf;
   --syn-ai-soft: #efecfb;
 
   /* Text */
   --syn-ink: #0f1b2d;
   --syn-text-secondary: #526077;
-  --syn-text-muted: #8a94a6;
+  --syn-text-muted: #667186;
 
   /* Surfaces */
   --syn-canvas: #f7f8fa;
   --syn-surface: #ffffff;
   --syn-border: #e3e7ed;
 
-  /* Status */
+  /* Status. Success and warning are for fills and icons; use the -text tokens for words,
+     because the bright versions fall below WCAG AA as text. Danger works for both. */
   --syn-success: #1f9d55;
+  --syn-success-text: #1a8146;
   --syn-warning: #d99a0b;
-  --syn-danger: #d64545;
+  --syn-warning-text: #936807;
+  --syn-danger: #d23434;
 
   /* Categorical chart palette, in order. Violet deliberately excluded. */
   --syn-chart-1: #0e7c6b; /* teal */
@@ -77,7 +81,9 @@
   --syn-surface: #151e2c;
   --syn-border: #263245;
   --syn-success: #3cc47a;
+  --syn-success-text: #3cc47a;
   --syn-warning: #f0b43a;
+  --syn-warning-text: #f0b43a;
   --syn-danger: #f07070;
 }
 

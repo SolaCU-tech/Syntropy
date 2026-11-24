@@ -439,17 +439,21 @@ Syntropy is the calm organizer: clean, light and friendly, teal for action and v
 | Primary | #0E7C6B | Buttons, links, selection, active nav |
 | Primary hover | #0A6658 | Hover and pressed states |
 | Primary soft | #E6F4F1 | Selected rows, soft highlights |
-| AI violet | #6D5BD0 | Only AI-generated content: suggestions, AI badges, Ask interpretations |
+| AI violet | #6957CF | Only AI-generated content: suggestions, AI badges, Ask interpretations |
 | AI soft | #EFECFB | Background of AI badges and cards |
 | Ink | #0F1B2D | Primary text |
 | Text secondary | #526077 | Supporting text |
-| Text muted | #8A94A6 | Placeholders, captions |
+| Text muted | #667186 | Placeholders, captions |
 | Canvas | #F7F8FA | App background |
 | Surface | #FFFFFF | Cards, tables, dialogs |
 | Border | #E3E7ED | Hairlines and dividers |
 | Success | #1F9D55 | Good, reconciled, synced |
+| Success text | #1A8146 | Success wording (the brighter green is for fills and icons) |
 | Warning | #D99A0B | Needs check, medium confidence |
-| Danger | #D64545 | Errors, low confidence, blocked |
+| Warning text | #936807 | Warning wording (the bright amber is for fills and icons) |
+| Danger | #D23434 | Errors, low confidence, blocked |
+
+Contrast adjustment (Agreed, 24 November 2026): text muted, danger and AI violet were darkened, and success text and warning text were added, so that every text use meets WCAG AA (4.5:1) on Surface and Canvas. Use Success and Warning for fills and icons, and their text tokens for words.
 
 **Chart palette** (categorical, in order): teal #0E7C6B, blue #2F6FDB, amber #E0A100, coral #E4572E, slate #5B6B82, green #4C9A2A. Violet is excluded so charts never look like AI suggestions. Validate contrast and colour-blind separation before locking.
 
