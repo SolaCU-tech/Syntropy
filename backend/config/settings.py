@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "apps.core",
     "apps.tenancy",
     "apps.schema_registry",
+    "apps.storage",
 ]
 
 MIDDLEWARE = [
