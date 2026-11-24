@@ -1,0 +1,89 @@
+/*
+ * Syntropy design tokens — spec section 14 (ADR-15, ADR-22).
+ * The light theme values are the spec's and must not change without updating the spec.
+ * Dark tokens are defined now and shipped later (ADR-22); their values are a first draft.
+ *
+ * Rules worth remembering:
+ *   - Teal (--syn-primary) is for action: buttons, links, selection, active nav.
+ *   - Violet (--syn-ai) is ONLY for AI-generated content. Never use it for anything else.
+ *   - Charts never use violet, so they can't be mistaken for AI suggestions.
+ */
+
+:root {
+  /* Brand and action */
+  --syn-primary: #0e7c6b;
+  --syn-primary-hover: #0a6658;
+  --syn-primary-soft: #e6f4f1;
+  --syn-on-primary: #ffffff;
+
+  /* AI-only */
+  --syn-ai: #6d5bd0;
+  --syn-ai-soft: #efecfb;
+
+  /* Text */
+  --syn-ink: #0f1b2d;
+  --syn-text-secondary: #526077;
+  --syn-text-muted: #8a94a6;
+
+  /* Surfaces */
+  --syn-canvas: #f7f8fa;
+  --syn-surface: #ffffff;
+  --syn-border: #e3e7ed;
+
+  /* Status */
+  --syn-success: #1f9d55;
+  --syn-warning: #d99a0b;
+  --syn-danger: #d64545;
+
+  /* Categorical chart palette, in order. Violet deliberately excluded. */
+  --syn-chart-1: #0e7c6b; /* teal */
+  --syn-chart-2: #2f6fdb; /* blue */
+  --syn-chart-3: #e0a100; /* amber */
+  --syn-chart-4: #e4572e; /* coral */
+  --syn-chart-5: #5b6b82; /* slate */
+  --syn-chart-6: #4c9a2a; /* green */
+
+  /* Typography: Inter for UI, JetBrains Mono only in technical mode */
+  --syn-font-sans: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --syn-font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, Consolas, monospace;
+
+  /* Shape: 8px controls, 12px cards, 16px dialogs */
+  --syn-radius-control: 8px;
+  --syn-radius-card: 12px;
+  --syn-radius-dialog: 16px;
+
+  /* Motion: 150–200ms ease-out */
+  --syn-duration-fast: 150ms;
+  --syn-duration-base: 200ms;
+  --syn-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Shadows are barely there; borders do the separating */
+  --syn-shadow-sm: 0 1px 2px rgb(15 27 45 / 0.04);
+  --syn-shadow-md: 0 4px 12px rgb(15 27 45 / 0.06);
+}
+
+/* Dark theme: defined now, shipped later (ADR-22). Draft values. */
+[data-theme='dark'] {
+  --syn-primary: #2bb39c;
+  --syn-primary-hover: #49c7b1;
+  --syn-primary-soft: #12332e;
+  --syn-on-primary: #06201b;
+  --syn-ai: #a497f0;
+  --syn-ai-soft: #262145;
+  --syn-ink: #e8edf4;
+  --syn-text-secondary: #a9b4c6;
+  --syn-text-muted: #7c879a;
+  --syn-canvas: #0d1420;
+  --syn-surface: #151e2c;
+  --syn-border: #263245;
+  --syn-success: #3cc47a;
+  --syn-warning: #f0b43a;
+  --syn-danger: #f07070;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --syn-duration-fast: 0ms;
+    --syn-duration-base: 0ms;
+  }
+}

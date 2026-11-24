@@ -1,0 +1,9 @@
+# Keep LF line endings in the repo on every OS (Windows checkouts otherwise get CRLF,
+# which breaks shell scripts in containers and makes noisy diffs).
+* text=auto eol=lf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+*.png binary
+*.jpg binary
+*.pdf binary
+*.woff2 binary

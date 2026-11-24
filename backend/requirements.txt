@@ -1,0 +1,8 @@
+# Runtime dependencies. Pinned so every machine (your PC, CI, Docker) runs the same versions.
+Django==5.2.19
+djangorestframework==3.18.3
+drf-spectacular==0.30.0
+psycopg[binary]==3.3.9
+celery==5.7.0
+redis==8.2.0
+django-environ==0.14.0

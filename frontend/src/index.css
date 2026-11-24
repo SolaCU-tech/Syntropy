@@ -1,0 +1,105 @@
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/jetbrains-mono';
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import './styles/tokens.css';
+
+@custom-variant dark (&:is([data-theme='dark'] *));
+
+/*
+ * shadcn/ui reads these variable names. They point at the Syntropy tokens,
+ * so shadcn components pick up the spec's colours with no per-component overrides.
+ */
+:root {
+  --background: var(--syn-canvas);
+  --foreground: var(--syn-ink);
+  --card: var(--syn-surface);
+  --card-foreground: var(--syn-ink);
+  --popover: var(--syn-surface);
+  --popover-foreground: var(--syn-ink);
+  --primary: var(--syn-primary);
+  --primary-foreground: var(--syn-on-primary);
+  --secondary: var(--syn-primary-soft);
+  --secondary-foreground: var(--syn-ink);
+  --muted: var(--syn-canvas);
+  --muted-foreground: var(--syn-text-secondary);
+  --accent: var(--syn-primary-soft);
+  --accent-foreground: var(--syn-ink);
+  --destructive: var(--syn-danger);
+  --border: var(--syn-border);
+  --input: var(--syn-border);
+  --ring: var(--syn-primary);
+  --radius: var(--syn-radius-control);
+}
+
+@theme inline {
+  --font-sans: var(--syn-font-sans);
+  --font-mono: var(--syn-font-mono);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--syn-primary-hover);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Syntropy-specific */
+  --color-ink: var(--syn-ink);
+  --color-text-secondary: var(--syn-text-secondary);
+  --color-text-muted: var(--syn-text-muted);
+  --color-canvas: var(--syn-canvas);
+  --color-surface: var(--syn-surface);
+  --color-ai: var(--syn-ai);
+  --color-ai-soft: var(--syn-ai-soft);
+  --color-success: var(--syn-success);
+  --color-warning: var(--syn-warning);
+  --color-danger: var(--syn-danger);
+  --color-chart-1: var(--syn-chart-1);
+  --color-chart-2: var(--syn-chart-2);
+  --color-chart-3: var(--syn-chart-3);
+  --color-chart-4: var(--syn-chart-4);
+  --color-chart-5: var(--syn-chart-5);
+  --color-chart-6: var(--syn-chart-6);
+
+  --radius-sm: calc(var(--syn-radius-control) - 2px);
+  --radius-md: var(--syn-radius-control);
+  --radius-lg: var(--syn-radius-card);
+  --radius-xl: var(--syn-radius-dialog);
+
+  --shadow-sm: var(--syn-shadow-sm);
+  --shadow-md: var(--syn-shadow-md);
+
+  --ease-out: var(--syn-ease-out);
+  --default-transition-duration: var(--syn-duration-fast);
+  --default-transition-timing-function: var(--syn-ease-out);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    font-family: var(--syn-font-sans);
+  }
+  body {
+    @apply bg-background text-foreground text-sm antialiased;
+  }
+}
+
+/* Numbers and money always use tabular figures so columns line up. */
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
