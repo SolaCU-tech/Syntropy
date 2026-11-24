@@ -116,6 +116,261 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: ''
+  /api/workspaces/{workspace_id}/tables/{table_id}/records/:
+    get:
+      operationId: records_list
+      description: Browse a table's records (newest first) and create new ones.
+      parameters:
+      - in: query
+        name: cursor
+        schema:
+          type: string
+        description: From the previous page's next link.
+      - in: query
+        name: page_size
+        schema:
+          type: integer
+        description: Up to 200; default 50.
+      - in: path
+        name: table_id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - workspaces
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordPage'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+    post:
+      operationId: records_create
+      description: Browse a table's records (newest first) and create new ones.
+      parameters:
+      - in: path
+        name: table_id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - workspaces
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RecordCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RecordCreateRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Record'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/workspaces/{workspace_id}/tables/{table_id}/records/{record_id}/:
+    get:
+      operationId: records_retrieve
+      description: Read, edit or delete one record.
+      parameters:
+      - in: path
+        name: record_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: table_id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - workspaces
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Record'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+    patch:
+      operationId: records_partial_update
+      description: Read, edit or delete one record.
+      parameters:
+      - in: path
+        name: record_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: table_id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - workspaces
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedRecordUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedRecordUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedRecordUpdateRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Record'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordConflict'
+          description: Stale version (with the current record) or a duplicate value.
+    delete:
+      operationId: records_destroy
+      description: Read, edit or delete one record.
+      parameters:
+      - in: path
+        name: record_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: table_id
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: version
+        schema:
+          type: integer
+          minimum: 1
+        description: If sent, a stale version returns 409.
+      - in: path
+        name: workspace_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - workspaces
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordDeleted'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
 components:
   schemas:
     Cardinality:
@@ -329,6 +584,23 @@ components:
       - ai
       - import
       type: string
+    PatchedRecordUpdateRequest:
+      type: object
+      properties:
+        version:
+          type: integer
+          minimum: 1
+          description: The version you last read. A stale version returns 409.
+        values:
+          type: object
+          additionalProperties:
+            oneOf:
+            - {}
+            - type: 'null'
+          description: Values keyed by SSD field ID. Decimals are strings ("1500.00"),
+            dates are "YYYY-MM-DD", datetimes are ISO 8601 in UTC, and a reference
+            field holds the linked record's ID. Only the fields sent change; null
+            clears a field.
     Provenance:
       additionalProperties: false
       description: 'Where a field came from: who proposed it and from which source
@@ -362,6 +634,118 @@ components:
           title: Note
       title: Provenance
       type: object
+    Record:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        table_id:
+          type: string
+        version:
+          type: integer
+          description: Send this back when editing the record.
+        schema_version:
+          type: integer
+          description: The schema version the record was last written against.
+        values:
+          type: object
+          additionalProperties:
+            oneOf:
+            - {}
+            - type: 'null'
+          description: Values keyed by SSD field ID. Decimals are strings ("1500.00"),
+            dates are "YYYY-MM-DD", datetimes are ISO 8601 in UTC, and a reference
+            field holds the linked record's ID.
+        created_by:
+          type:
+          - integer
+          - 'null'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+      - created_at
+      - created_by
+      - id
+      - schema_version
+      - table_id
+      - updated_at
+      - values
+      - version
+    RecordConflict:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: {}
+        current:
+          allOf:
+          - $ref: '#/components/schemas/Record'
+          description: The record as it is now on the server.
+      required:
+      - code
+      - current
+      - message
+    RecordCreateRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Optional client-generated ID (UUIDv7 from offline devices).
+        values:
+          type: object
+          additionalProperties:
+            oneOf:
+            - {}
+            - type: 'null'
+          description: Values keyed by SSD field ID. Decimals are strings ("1500.00"),
+            dates are "YYYY-MM-DD", datetimes are ISO 8601 in UTC, and a reference
+            field holds the linked record's ID.
+      required:
+      - values
+    RecordDeleted:
+      type: object
+      properties:
+        deleted:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: Every record removed, including any removed by a cascade.
+      required:
+      - deleted
+    RecordPage:
+      type: object
+      properties:
+        next:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: The next page, or null.
+        previous:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: The previous page, or null.
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Record'
+      required:
+      - next
+      - previous
+      - results
     Relationship:
       additionalProperties: false
       description: |-

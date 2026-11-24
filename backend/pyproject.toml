@@ -16,6 +16,8 @@ ignore = []
 "**/tests/**" = ["S101", "S105", "S106"]
 "**/test_*.py" = ["S101", "S105", "S106"]
 "config/settings.py" = ["S105"]
+# Benchmark SQL interpolates only identifiers that physical.q() has validated.
+"apps/storage/benchmark/*" = ["S608"]
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings_test"
