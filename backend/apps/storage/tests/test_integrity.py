@@ -284,3 +284,80 @@ def test_restrict_holds_when_a_link_and_a_delete_race(store):
             assert isinstance(deleted, errors.RecordInUse)
         else:
             assert isinstance(sold, errors.InvalidReference)
+
+
+# Value checks in the database itself (migration 0004): bad values are refused even when the
+# store is bypassed.
+
+
+@pytest.mark.django_db
+class TestDatabaseValueChecks:
+    @pytest.mark.parametrize(
+        ("change", "why"),
+        [
+            ({"fld_sale_quantity": "lots"}, "string where an integer belongs"),
+            ({"fld_sale_quantity": 2.5}, "fractional integer"),
+            ({"fld_sale_quantity": 0}, "below min_value 1"),
+            ({"fld_sale_quantity": 2**53}, "beyond JavaScript's safe integers"),
+            ({"fld_sale_total_amount": 1000}, "decimal as a number, not a string"),
+            ({"fld_sale_total_amount": "1000.5"}, "decimal not at the field's scale"),
+            ({"fld_sale_total_amount": "1e3"}, "decimal in exponent form"),
+            ({"fld_sale_total_amount": "-5.00"}, "below min_value 0"),
+            ({"fld_sale_total_amount": "123456789012345.00"}, "more than 14 digits"),
+            ({"fld_sale_date": "24/11/2026"}, "date not in YYYY-MM-DD"),
+            ({"fld_sale_date": "2026-02-30"}, "date that doesn't exist"),
+            ({"fld_sale_payment_status": "maybe"}, "enum value not in the options"),
+            ({"fld_sale_notes": "x" * 501}, "text over max_length"),
+            ({"fld_sale_date": None}, "required field set to null"),
+            ({"fld_sale_unknown": "x"}, "field not in the table"),
+        ],
+    )
+    def test_bad_values_are_refused(self, make_sale, change, why):
+        sale = make_sale()
+        row = BusinessRecord.objects.get(pk=sale.id)
+        with pytest.raises(IntegrityError), transaction.atomic():
+            BusinessRecord.objects.filter(pk=row.pk).update(
+                data={**row.data, **change}, version=row.version + 1
+            )
+
+    def test_removing_a_required_field_is_refused(self, make_sale):
+        sale = make_sale()
+        with pytest.raises(IntegrityError), transaction.atomic(), connection.cursor() as cur:
+            cur.execute(
+                "UPDATE business_records SET data = data - 'fld_sale_date', "
+                "version = version + 1 WHERE id = %s",
+                [sale.id],
+            )
+
+    def test_records_must_name_a_published_version_holding_their_table(self, store, owner):
+        draft = registry.create_draft(store.workspace, store.schema.ssd.model_dump(mode="json"))
+        with pytest.raises(IntegrityError), transaction.atomic():
+            BusinessRecord.objects.create(
+                workspace=store.workspace,
+                table_id=CUSTOMERS,
+                schema_version=draft,
+                data=customer_values(1),
+            )
+
+    def test_canonical_values_written_by_the_store_pass(self, store, make_customer, make_sale):
+        customer = make_customer(fld_customer_credit_limit="0")
+        make_sale(
+            customer=customer,
+            fld_sale_notes="",
+            fld_sale_payment_method="pos",
+            fld_sale_amount_paid="0.5",
+        )
+        assert store.get(CUSTOMERS, customer.id).values["fld_customer_credit_limit"] == "0.00"
+
+    def test_rules_are_compiled_when_a_version_is_published(self, store):
+        from apps.storage.models import FieldRules
+
+        rules = FieldRules.objects.get(schema_version=store.schema.version, table_id=SALES)
+        assert "fld_sale_customer" not in rules.allowed  # references live in the link table
+        quantity = next(f for f in rules.fields if f["id"] == "fld_sale_quantity")
+        assert quantity == {
+            "id": "fld_sale_quantity",
+            "type": "integer",
+            "required": True,
+            "min": "1",
+        }
