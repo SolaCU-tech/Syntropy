@@ -20,7 +20,7 @@ from uuid import UUID
 
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import IntegrityError, connection, transaction
-from django.db.models import F, QuerySet
+from django.db.models import F, Q, QuerySet
 from django.utils import timezone
 
 from apps.schema_registry.models import SchemaVersion
@@ -115,27 +115,28 @@ class JsonbRecordStore:
             versions.update(
                 SchemaVersion.objects.filter(pk__in=missing).values_list("pk", "number")
             )
-        out = []
-        for row in rows:
-            values = {}
-            for f in table.fields:
-                if f.type == LogicalType.REFERENCE:
-                    values[f.id] = links[row.id].get(f.id)
-                else:
-                    values[f.id] = row.data.get(f.id)
-            out.append(
-                StoredRecord(
-                    id=row.id,
-                    table_id=row.table_id,
-                    version=row.version,
-                    schema_version=versions[row.schema_version_id],
-                    values=values,
-                    created_by_id=row.created_by_id,
-                    created_at=row.created_at,
-                    updated_at=row.updated_at,
-                )
-            )
-        return out
+        return [
+            self._stored(table, row, links[row.id], versions[row.schema_version_id]) for row in rows
+        ]
+
+    @staticmethod
+    def _stored(
+        table: Table, row: BusinessRecord, links: dict[str, str], schema_number: int
+    ) -> StoredRecord:
+        values = {
+            f.id: links.get(f.id) if f.type == LogicalType.REFERENCE else row.data.get(f.id)
+            for f in table.fields
+        }
+        return StoredRecord(
+            id=row.id,
+            table_id=row.table_id,
+            version=row.version,
+            schema_version=schema_number,
+            values=values,
+            created_by_id=row.created_by_id,
+            created_at=row.created_at,
+            updated_at=row.updated_at,
+        )
 
     def _get_row(self, table_id: str, record_id: UUID | str, *, lock: bool = False):
         qs = self.queryset(table_id)
@@ -179,10 +180,9 @@ class JsonbRecordStore:
                 self._claim_unique_values(table_id, unique_fields(table), [(row.id, data)])
                 self._write_links(table, row.id, cleaned.links)
         except IntegrityError as exc:
-            if _constraint_name(exc) == "business_records_pkey":
-                raise RecordExists() from None
-            raise
-        return self.get(table_id, row.id)
+            raise self._translate(exc, cleaned) from None
+        links = {f: str(t) for f, t in cleaned.links.items() if t is not None}
+        return self._stored(table, row, links, self.schema.version.number)
 
     # Editing
 
@@ -196,41 +196,52 @@ class JsonbRecordStore:
         actor=None,
     ) -> StoredRecord:
         table = self.schema.table(table_id)
-        with transaction.atomic():
-            row = self._get_row(table_id, record_id, lock=True)
-            if row.version != expected_version:
-                raise VersionConflict(self.hydrate(table_id, [row])[0])
-            cleaned = clean_values(table, values, creating=False)
-            if cleaned.errors:
-                raise RecordValidationError(details=cleaned.errors)
-            self._check_link_targets(cleaned)
+        cleaned = clean_values(table, values, creating=False)
+        try:
+            with transaction.atomic():
+                row = self._update_locked(table, record_id, cleaned, expected_version, actor)
+        except IntegrityError as exc:
+            raise self._translate(exc, cleaned) from None
+        return self.hydrate(table_id, [row])[0]
 
-            data = dict(row.data)
-            for field_id, value in cleaned.scalars.items():
-                if value is None:
-                    data.pop(field_id, None)
-                else:
-                    data[field_id] = value
-            changed_unique = [
-                f for f in unique_fields(table) if row.data.get(f.id) != data.get(f.id)
-            ]
-            if changed_unique:
-                UniqueValue.objects.filter(
-                    workspace=self.workspace,
-                    record_id=row.id,
-                    field_id__in=[f.id for f in changed_unique],
-                ).delete()
-                self._claim_unique_values(table_id, changed_unique, [(row.id, data)])
-            self._write_links(table, row.id, cleaned.links, replace=True)
+    def _update_locked(
+        self,
+        table: Table,
+        record_id: UUID | str,
+        cleaned: CleanedValues,
+        expected_version: int,
+        actor,
+    ) -> BusinessRecord:
+        table_id = table.id
+        row = self._get_row(table_id, record_id, lock=True)
+        if row.version != expected_version:
+            raise VersionConflict(self.hydrate(table_id, [row])[0])
+        if cleaned.errors:
+            raise RecordValidationError(details=cleaned.errors)
+        self._check_link_targets(cleaned)
 
-            row.data = data
-            row.version = row.version + 1
-            row.schema_version = self.schema.version
-            row.updated_by = actor
-            row.save(
-                update_fields=["data", "version", "schema_version", "updated_by", "updated_at"]
-            )
-        return self.get(table_id, row.id)
+        data = dict(row.data)
+        for field_id, value in cleaned.scalars.items():
+            if value is None:
+                data.pop(field_id, None)
+            else:
+                data[field_id] = value
+        changed_unique = [f for f in unique_fields(table) if row.data.get(f.id) != data.get(f.id)]
+        if changed_unique:
+            UniqueValue.objects.filter(
+                workspace=self.workspace,
+                record_id=row.id,
+                field_id__in=[f.id for f in changed_unique],
+            ).delete()
+            self._claim_unique_values(table_id, changed_unique, [(row.id, data)])
+        self._write_links(table, row.id, cleaned.links, replace=True)
+
+        row.data = data
+        row.version = row.version + 1
+        row.schema_version = self.schema.version
+        row.updated_by = actor
+        row.save(update_fields=["data", "version", "schema_version", "updated_by", "updated_at"])
+        return row
 
     # Deleting
 
@@ -410,16 +421,45 @@ class JsonbRecordStore:
             )
         return found
 
+    def _missing_link_targets(self, cleaned: CleanedValues) -> dict[str, list[str]]:
+        """Reference fields whose target isn't a record of the right table in this workspace,
+        checked with one query."""
+        wanted = {
+            field_id: (self.schema.relationship_by_field[field_id].to_table, target)
+            for field_id, target in cleaned.links.items()
+            if target is not None
+        }
+        if not wanted:
+            return {}
+        match = Q()
+        for to_table, target in wanted.values():
+            match |= Q(table_id=to_table, id=target)
+        found = set(
+            BusinessRecord.objects.filter(match, workspace=self.workspace).values_list(
+                "table_id", "id"
+            )
+        )
+        return {f: [InvalidReference.message] for f, key in wanted.items() if key not in found}
+
     def _check_link_targets(self, cleaned: CleanedValues) -> None:
-        errors: dict[str, list[str]] = {}
-        for field_id, target in cleaned.links.items():
-            if target is None:
-                continue
-            rel = self.schema.relationship_by_field[field_id]
-            if not self._existing_ids(rel.to_table, [target]):
-                errors[field_id] = [InvalidReference.message]
-        if errors:
-            raise InvalidReference(details=errors)
+        missing = self._missing_link_targets(cleaned)
+        if missing:
+            raise InvalidReference(details=missing)
+
+    def _translate(self, exc: IntegrityError, cleaned: CleanedValues) -> Exception:
+        """Turn a constraint violation from a concurrent writer into a store error."""
+        name = _constraint_name(exc)
+        if name == "business_records_pkey":
+            return RecordExists()
+        if name == "record_link_to_record":
+            # A linked record was deleted after the friendly check; say which one.
+            return InvalidReference(details=self._missing_link_targets(cleaned) or None)
+        if name == "record_link_one_to_one":
+            fields = [f for f, t in cleaned.links.items() if t is not None]
+            return DuplicateValue(
+                details={f: ["Another record already links to this one."] for f in fields}
+            )
+        return exc
 
     def _link(
         self, from_table: str, from_id: UUID, rel: Relationship, to_id: UUID
@@ -442,26 +482,21 @@ class JsonbRecordStore:
         *,
         replace: bool = False,
     ) -> None:
-        for field_id, target in links.items():
-            rel = self.schema.relationship_by_field[field_id]
-            if replace:
-                RecordRelationship.objects.filter(
-                    workspace=self.workspace, from_record_id=record_id, relationship_id=rel.id
-                ).delete()
-            if target is None:
-                continue
-            try:
-                with transaction.atomic():
-                    self._link(table.id, record_id, rel, target).save(force_insert=True)
-            except IntegrityError as exc:
-                name = _constraint_name(exc)
-                if name == "record_link_to_record":
-                    raise InvalidReference(details={field_id: [InvalidReference.message]}) from None
-                if name == "record_link_one_to_one":
-                    raise DuplicateValue(
-                        details={field_id: ["Another record already links to this one."]}
-                    ) from None
-                raise
+        """Write a record's links. Constraint violations propagate to ``_translate``."""
+        rels = {f: self.schema.relationship_by_field[f] for f in links}
+        if replace and rels:
+            RecordRelationship.objects.filter(
+                workspace=self.workspace,
+                from_record_id=record_id,
+                relationship_id__in=[r.id for r in rels.values()],
+            ).delete()
+        new = [
+            self._link(table.id, record_id, rels[f], target)
+            for f, target in links.items()
+            if target is not None
+        ]
+        if new:
+            RecordRelationship.objects.bulk_create(new)
 
     def _claim_unique_values(
         self,

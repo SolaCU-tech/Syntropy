@@ -13,6 +13,10 @@ Django can't declare composite foreign keys, so migration 0002 adds them in SQL:
   already applied the relationship's delete policy;
 * a record's ID, workspace and table can never change, and its JSONB must be a flat object
   of scalars keyed by field ID.
+
+The workspace foreign keys have no single-column index on purpose: every composite index here
+starts with workspace_id, and a separate workspace-only index tempted the planner into
+scanning a whole workspace for each foreign-key check (found by the Phase 2 benchmark).
 """
 
 import uuid
@@ -29,7 +33,9 @@ ID_LENGTH = 52  # "tbl_"/"fld_"/"rel_" + up to 48 characters (see the SSD models
 class BusinessRecord(models.Model):
     # Client-generated UUIDs (UUIDv7 from offline devices, ADR-27) are accepted as-is.
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    workspace = models.ForeignKey(Workspace, on_delete=models.PROTECT, related_name="+")
+    workspace = models.ForeignKey(
+        Workspace, on_delete=models.PROTECT, related_name="+", db_index=False
+    )
     table_id = models.CharField(max_length=ID_LENGTH)
     # The published schema version this record was last written against.
     schema_version = models.ForeignKey(SchemaVersion, on_delete=models.PROTECT, related_name="+")
@@ -74,7 +80,9 @@ class BusinessRecord(models.Model):
 class RecordRelationship(models.Model):
     """One link from a source record's reference field to a target record."""
 
-    workspace = models.ForeignKey(Workspace, on_delete=models.PROTECT, related_name="+")
+    workspace = models.ForeignKey(
+        Workspace, on_delete=models.PROTECT, related_name="+", db_index=False
+    )
     relationship_id = models.CharField(max_length=ID_LENGTH)
     from_table_id = models.CharField(max_length=ID_LENGTH)
     from_record_id = models.UUIDField()
@@ -120,7 +128,9 @@ class UniqueValue(models.Model):
     expression indexes on the shared table.
     """
 
-    workspace = models.ForeignKey(Workspace, on_delete=models.PROTECT, related_name="+")
+    workspace = models.ForeignKey(
+        Workspace, on_delete=models.PROTECT, related_name="+", db_index=False
+    )
     table_id = models.CharField(max_length=ID_LENGTH)
     field_id = models.CharField(max_length=ID_LENGTH)
     value_key = models.CharField(max_length=255)
