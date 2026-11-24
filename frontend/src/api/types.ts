@@ -21,18 +21,169 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/workspaces/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The workspaces the signed-in user belongs to, and creating a new one. */
+        get: operations["workspaces_list"];
+        put?: never;
+        /** @description The workspaces the signed-in user belongs to, and creating a new one. */
+        post: operations["workspaces_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/workspaces/{workspace_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description One workspace the signed-in user belongs to, with their role in it. */
+        get: operations["workspaces_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/workspaces/{workspace_id}/schema/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The workspace's active (published) schema as an SSD document. Read-only. */
+        get: operations["workspace_schema_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * Cardinality
+         * @enum {string}
+         */
+        Cardinality: "many_to_one" | "one_to_one";
         /**
          * @description * `ok` - ok
          *     * `unavailable` - unavailable
          * @enum {string}
          */
         DatabaseEnum: "ok" | "unavailable";
+        /**
+         * DeletePolicy
+         * @enum {string}
+         */
+        DeletePolicy: "restrict" | "cascade" | "set_null";
+        /**
+         * DisplayRole
+         * @description How the UI, reports and insights should treat a field.
+         * @enum {string}
+         */
+        DisplayRole: "title" | "money" | "quantity" | "status" | "date";
+        /** EnumOption */
+        EnumOption: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+        };
+        Error: {
+            code: string;
+            message: string;
+            details?: {
+                [key: string]: unknown;
+            };
+        };
+        /** FieldDef */
+        FieldDef: {
+            /** Id */
+            id: string;
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /**
+             * Description
+             * @default null
+             */
+            description: string | null;
+            type: components["schemas"]["LogicalType"];
+            /**
+             * Required
+             * @default false
+             */
+            required: boolean;
+            /**
+             * Unique
+             * @default false
+             */
+            unique: boolean;
+            /**
+             * Default
+             * @default null
+             */
+            default: string | boolean | number | null;
+            /**
+             * Min Value
+             * @default null
+             */
+            min_value: string | null;
+            /**
+             * Max Value
+             * @default null
+             */
+            max_value: string | null;
+            /**
+             * Max Length
+             * @default null
+             */
+            max_length: number | null;
+            /**
+             * Precision
+             * @default null
+             */
+            precision: number | null;
+            /**
+             * Scale
+             * @default null
+             */
+            scale: number | null;
+            /**
+             * Currency
+             * @default null
+             */
+            currency: string | null;
+            /**
+             * Options
+             * @default null
+             */
+            options: components["schemas"]["EnumOption"][] | null;
+            /** @default null */
+            display_role: components["schemas"]["DisplayRole"] | null;
+            /** @default null */
+            provenance: components["schemas"]["Provenance"] | null;
+        };
         Health: {
-            status: components["schemas"]["StatusEnum"];
+            status: components["schemas"]["HealthStatusEnum"];
             database: components["schemas"]["DatabaseEnum"];
         };
         /**
@@ -40,7 +191,192 @@ export interface components {
          *     * `degraded` - degraded
          * @enum {string}
          */
-        StatusEnum: "ok" | "degraded";
+        HealthStatusEnum: "ok" | "degraded";
+        /**
+         * LogicalType
+         * @enum {string}
+         */
+        LogicalType: "text" | "integer" | "decimal" | "boolean" | "date" | "datetime" | "enum" | "reference";
+        /** @enum {string} */
+        OriginEnum: "manual" | "ai" | "import";
+        /**
+         * Provenance
+         * @description Where a field came from: who proposed it and from which source column.
+         */
+        Provenance: {
+            /**
+             * Origin
+             * @default manual
+             */
+            origin: components["schemas"]["OriginEnum"];
+            /**
+             * Source File
+             * @default null
+             */
+            source_file: string | null;
+            /**
+             * Source Column
+             * @default null
+             */
+            source_column: string | null;
+            /**
+             * Note
+             * @default null
+             */
+            note: string | null;
+        };
+        /**
+         * Relationship
+         * @description A link from a reference field on one table to a record in another.
+         *
+         *     ``to_field`` is omitted when the link points at the target record itself (the usual
+         *     case); when set, it must be a unique field on the target table.
+         */
+        Relationship: {
+            /** Id */
+            id: string;
+            /** From Table */
+            from_table: string;
+            /** From Field */
+            from_field: string;
+            /** To Table */
+            to_table: string;
+            /**
+             * To Field
+             * @default null
+             */
+            to_field: string | null;
+            /** @default many_to_one */
+            cardinality: components["schemas"]["Cardinality"];
+            /** Optional */
+            optional: boolean;
+            /** @default restrict */
+            on_delete: components["schemas"]["DeletePolicy"];
+            /** Description */
+            description: string;
+        };
+        /**
+         * @description * `owner` - Owner
+         *     * `admin` - Admin
+         *     * `editor` - Editor
+         *     * `viewer` - Viewer
+         * @enum {string}
+         */
+        RoleEnum: "owner" | "admin" | "editor" | "viewer";
+        /**
+         * SSD
+         * @description A complete Syntropy Schema Definition document.
+         */
+        SSD: {
+            /**
+             * Spec Version
+             * @constant
+             */
+            spec_version: "1.0";
+            /**
+             * Workspace Id
+             * @default null
+             */
+            workspace_id: string | null;
+            /**
+             * Version
+             * @default null
+             */
+            version: number | null;
+            /**
+             * Status
+             * @default draft
+             */
+            status: components["schemas"]["SSDStatusEnum"];
+            /** Tables */
+            tables: components["schemas"]["Table"][];
+            /**
+             * Relationships
+             * @default []
+             */
+            relationships: components["schemas"]["Relationship"][];
+            /**
+             * Source Mappings
+             * @default []
+             */
+            source_mappings: components["schemas"]["SourceMapping"][];
+        };
+        /** @enum {string} */
+        SSDStatusEnum: "draft" | "published" | "superseded";
+        /**
+         * SourceMapping
+         * @description Links one column of an uploaded file to a field (spec section 8).
+         */
+        SourceMapping: {
+            /** Id */
+            id: string;
+            /** Source File */
+            source_file: string;
+            /**
+             * Sheet
+             * @default null
+             */
+            sheet: string | null;
+            /** Column */
+            column: string;
+            /** Table */
+            table: string;
+            /** Field */
+            field: string;
+            /** @default none */
+            transform: components["schemas"]["Transform"];
+        };
+        /** Table */
+        Table: {
+            /** Id */
+            id: string;
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /**
+             * Description
+             * @default null
+             */
+            description: string | null;
+            /**
+             * Icon
+             * @default null
+             */
+            icon: string | null;
+            /** Fields */
+            fields: components["schemas"]["FieldDef"][];
+        };
+        /**
+         * Transform
+         * @description Deterministic transforms applied to a source value during import (Phase 4).
+         * @enum {string}
+         */
+        Transform: "none" | "trim" | "parse_integer" | "parse_decimal" | "parse_money" | "parse_date_day_first" | "parse_date_month_first" | "parse_datetime" | "parse_boolean" | "enum_lookup" | "link_lookup";
+        Workspace: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly name: string;
+            readonly slug: string;
+            readonly status: components["schemas"]["WorkspaceStatusEnum"];
+            readonly timezone: string;
+            readonly currency: string;
+            readonly organization_name: string;
+            readonly role: components["schemas"]["RoleEnum"];
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        WorkspaceCreateRequest: {
+            name: string;
+            organization_name?: string;
+        };
+        /**
+         * @description * `setup` - Being set up
+         *     * `active` - Active
+         *     * `archived` - Archived
+         * @enum {string}
+         */
+        WorkspaceStatusEnum: "setup" | "active" | "archived";
     };
     responses: never;
     parameters: never;
@@ -65,6 +401,100 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Health"];
+                };
+            };
+        };
+    };
+    workspaces_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Workspace"][];
+                };
+            };
+        };
+    };
+    workspaces_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkspaceCreateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["WorkspaceCreateRequest"];
+                "multipart/form-data": components["schemas"]["WorkspaceCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Workspace"];
+                };
+            };
+        };
+    };
+    workspaces_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Workspace"];
+                };
+            };
+        };
+    };
+    workspace_schema_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SSD"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
                 };
             };
         };

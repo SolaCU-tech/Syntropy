@@ -1,4 +1,4 @@
-openapi: 3.0.3
+openapi: 3.1.0
 info:
   title: Syntropy API
   version: 0.1.0
@@ -20,8 +20,110 @@ paths:
               schema:
                 $ref: '#/components/schemas/Health'
           description: ''
+  /api/workspaces/:
+    get:
+      operationId: workspaces_list
+      description: The workspaces the signed-in user belongs to, and creating a new
+        one.
+      tags:
+      - workspaces
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Workspace'
+          description: ''
+    post:
+      operationId: workspaces_create
+      description: The workspaces the signed-in user belongs to, and creating a new
+        one.
+      tags:
+      - workspaces
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkspaceCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/WorkspaceCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/WorkspaceCreateRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workspace'
+          description: ''
+  /api/workspaces/{workspace_id}/:
+    get:
+      operationId: workspaces_retrieve
+      description: One workspace the signed-in user belongs to, with their role in
+        it.
+      parameters:
+      - in: path
+        name: workspace_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - workspaces
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workspace'
+          description: ''
+  /api/workspaces/{workspace_id}/schema/:
+    get:
+      operationId: workspace_schema_retrieve
+      description: The workspace's active (published) schema as an SSD document. Read-only.
+      parameters:
+      - in: path
+        name: workspace_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - workspaces
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SSD'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
 components:
   schemas:
+    Cardinality:
+      enum:
+      - many_to_one
+      - one_to_one
+      title: Cardinality
+      type: string
     DatabaseEnum:
       enum:
       - ok
@@ -30,17 +132,178 @@ components:
       description: |-
         * `ok` - ok
         * `unavailable` - unavailable
+    DeletePolicy:
+      enum:
+      - restrict
+      - cascade
+      - set_null
+      title: DeletePolicy
+      type: string
+    DisplayRole:
+      description: How the UI, reports and insights should treat a field.
+      enum:
+      - title
+      - money
+      - quantity
+      - status
+      - date
+      title: DisplayRole
+      type: string
+    EnumOption:
+      additionalProperties: false
+      properties:
+        key:
+          maxLength: 63
+          pattern: ^[a-z][a-z0-9]*(_[a-z0-9]+)*$
+          title: Key
+          type: string
+        label:
+          maxLength: 120
+          minLength: 1
+          title: Label
+          type: string
+      required:
+      - key
+      - label
+      title: EnumOption
+      type: object
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: {}
+      required:
+      - code
+      - message
+    FieldDef:
+      additionalProperties: false
+      properties:
+        id:
+          pattern: ^fld_[a-z0-9_]{3,48}$
+          title: Id
+          type: string
+        key:
+          maxLength: 63
+          pattern: ^[a-z][a-z0-9]*(_[a-z0-9]+)*$
+          title: Key
+          type: string
+        label:
+          maxLength: 120
+          minLength: 1
+          title: Label
+          type: string
+        description:
+          anyOf:
+          - maxLength: 500
+            type: string
+          - type: 'null'
+          default: null
+          title: Description
+        type:
+          $ref: '#/components/schemas/LogicalType'
+        required:
+          default: false
+          title: Required
+          type: boolean
+        unique:
+          default: false
+          title: Unique
+          type: boolean
+        default:
+          anyOf:
+          - type: string
+          - type: boolean
+          - type: integer
+          - type: 'null'
+          default: null
+          title: Default
+        min_value:
+          anyOf:
+          - pattern: ^-?\d{1,28}(\.\d{1,10})?$
+            type: string
+          - type: 'null'
+          default: null
+          title: Min Value
+        max_value:
+          anyOf:
+          - pattern: ^-?\d{1,28}(\.\d{1,10})?$
+            type: string
+          - type: 'null'
+          default: null
+          title: Max Value
+        max_length:
+          anyOf:
+          - maximum: 10000
+            minimum: 1
+            type: integer
+          - type: 'null'
+          default: null
+          title: Max Length
+        precision:
+          anyOf:
+          - maximum: 28
+            minimum: 1
+            type: integer
+          - type: 'null'
+          default: null
+          title: Precision
+        scale:
+          anyOf:
+          - maximum: 10
+            minimum: 0
+            type: integer
+          - type: 'null'
+          default: null
+          title: Scale
+        currency:
+          anyOf:
+          - pattern: ^[A-Z]{3}$
+            type: string
+          - type: 'null'
+          default: null
+          title: Currency
+        options:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/EnumOption'
+            maxItems: 100
+            type: array
+          - type: 'null'
+          default: null
+          title: Options
+        display_role:
+          anyOf:
+          - $ref: '#/components/schemas/DisplayRole'
+          - type: 'null'
+          default: null
+        provenance:
+          anyOf:
+          - $ref: '#/components/schemas/Provenance'
+          - type: 'null'
+          default: null
+      required:
+      - id
+      - key
+      - label
+      - type
+      title: FieldDef
+      type: object
     Health:
       type: object
       properties:
         status:
-          $ref: '#/components/schemas/StatusEnum'
+          $ref: '#/components/schemas/HealthStatusEnum'
         database:
           $ref: '#/components/schemas/DatabaseEnum'
       required:
       - database
       - status
-    StatusEnum:
+    HealthStatusEnum:
       enum:
       - ok
       - degraded
@@ -48,3 +311,360 @@ components:
       description: |-
         * `ok` - ok
         * `degraded` - degraded
+    LogicalType:
+      enum:
+      - text
+      - integer
+      - decimal
+      - boolean
+      - date
+      - datetime
+      - enum
+      - reference
+      title: LogicalType
+      type: string
+    OriginEnum:
+      enum:
+      - manual
+      - ai
+      - import
+      type: string
+    Provenance:
+      additionalProperties: false
+      description: 'Where a field came from: who proposed it and from which source
+        column.'
+      properties:
+        origin:
+          allOf:
+          - $ref: '#/components/schemas/OriginEnum'
+          default: manual
+          title: Origin
+        source_file:
+          anyOf:
+          - maxLength: 500
+            type: string
+          - type: 'null'
+          default: null
+          title: Source File
+        source_column:
+          anyOf:
+          - maxLength: 500
+            type: string
+          - type: 'null'
+          default: null
+          title: Source Column
+        note:
+          anyOf:
+          - maxLength: 500
+            type: string
+          - type: 'null'
+          default: null
+          title: Note
+      title: Provenance
+      type: object
+    Relationship:
+      additionalProperties: false
+      description: |-
+        A link from a reference field on one table to a record in another.
+
+        ``to_field`` is omitted when the link points at the target record itself (the usual
+        case); when set, it must be a unique field on the target table.
+      properties:
+        id:
+          pattern: ^rel_[a-z0-9_]{3,48}$
+          title: Id
+          type: string
+        from_table:
+          pattern: ^tbl_[a-z0-9_]{3,48}$
+          title: From Table
+          type: string
+        from_field:
+          pattern: ^fld_[a-z0-9_]{3,48}$
+          title: From Field
+          type: string
+        to_table:
+          pattern: ^tbl_[a-z0-9_]{3,48}$
+          title: To Table
+          type: string
+        to_field:
+          anyOf:
+          - pattern: ^fld_[a-z0-9_]{3,48}$
+            type: string
+          - type: 'null'
+          default: null
+          title: To Field
+        cardinality:
+          $ref: '#/components/schemas/Cardinality'
+          default: many_to_one
+        optional:
+          title: Optional
+          type: boolean
+        on_delete:
+          $ref: '#/components/schemas/DeletePolicy'
+          default: restrict
+        description:
+          maxLength: 120
+          minLength: 1
+          title: Description
+          type: string
+      required:
+      - id
+      - from_table
+      - from_field
+      - to_table
+      - optional
+      - description
+      title: Relationship
+      type: object
+    RoleEnum:
+      enum:
+      - owner
+      - admin
+      - editor
+      - viewer
+      type: string
+      description: |-
+        * `owner` - Owner
+        * `admin` - Admin
+        * `editor` - Editor
+        * `viewer` - Viewer
+    SSD:
+      additionalProperties: false
+      description: A complete Syntropy Schema Definition document.
+      properties:
+        spec_version:
+          const: '1.0'
+          title: Spec Version
+          type: string
+        workspace_id:
+          anyOf:
+          - format: uuid
+            type: string
+          - type: 'null'
+          default: null
+          title: Workspace Id
+        version:
+          anyOf:
+          - minimum: 1
+            type: integer
+          - type: 'null'
+          default: null
+          title: Version
+        status:
+          allOf:
+          - $ref: '#/components/schemas/SSDStatusEnum'
+          default: draft
+          title: Status
+        tables:
+          items:
+            $ref: '#/components/schemas/Table'
+          maxItems: 100
+          minItems: 1
+          title: Tables
+          type: array
+        relationships:
+          default: []
+          items:
+            $ref: '#/components/schemas/Relationship'
+          maxItems: 500
+          title: Relationships
+          type: array
+        source_mappings:
+          default: []
+          items:
+            $ref: '#/components/schemas/SourceMapping'
+          maxItems: 5000
+          title: Source Mappings
+          type: array
+      required:
+      - spec_version
+      - tables
+      title: SSD
+      type: object
+    SSDStatusEnum:
+      enum:
+      - draft
+      - published
+      - superseded
+      type: string
+    SourceMapping:
+      additionalProperties: false
+      description: Links one column of an uploaded file to a field (spec section 8).
+      properties:
+        id:
+          pattern: ^map_[a-z0-9_]{3,48}$
+          title: Id
+          type: string
+        source_file:
+          maxLength: 120
+          minLength: 1
+          title: Source File
+          type: string
+        sheet:
+          anyOf:
+          - maxLength: 120
+            minLength: 1
+            type: string
+          - type: 'null'
+          default: null
+          title: Sheet
+        column:
+          maxLength: 120
+          minLength: 1
+          title: Column
+          type: string
+        table:
+          pattern: ^tbl_[a-z0-9_]{3,48}$
+          title: Table
+          type: string
+        field:
+          pattern: ^fld_[a-z0-9_]{3,48}$
+          title: Field
+          type: string
+        transform:
+          $ref: '#/components/schemas/Transform'
+          default: none
+      required:
+      - id
+      - source_file
+      - column
+      - table
+      - field
+      title: SourceMapping
+      type: object
+    Table:
+      additionalProperties: false
+      properties:
+        id:
+          pattern: ^tbl_[a-z0-9_]{3,48}$
+          title: Id
+          type: string
+        key:
+          maxLength: 63
+          pattern: ^[a-z][a-z0-9]*(_[a-z0-9]+)*$
+          title: Key
+          type: string
+        label:
+          maxLength: 120
+          minLength: 1
+          title: Label
+          type: string
+        description:
+          anyOf:
+          - maxLength: 500
+            type: string
+          - type: 'null'
+          default: null
+          title: Description
+        icon:
+          anyOf:
+          - maxLength: 64
+            pattern: ^[a-z0-9]+(-[a-z0-9]+)*$
+            type: string
+          - type: 'null'
+          default: null
+          title: Icon
+        fields:
+          items:
+            $ref: '#/components/schemas/FieldDef'
+          maxItems: 200
+          minItems: 1
+          title: Fields
+          type: array
+      required:
+      - id
+      - key
+      - label
+      - fields
+      title: Table
+      type: object
+    Transform:
+      description: Deterministic transforms applied to a source value during import
+        (Phase 4).
+      enum:
+      - none
+      - trim
+      - parse_integer
+      - parse_decimal
+      - parse_money
+      - parse_date_day_first
+      - parse_date_month_first
+      - parse_datetime
+      - parse_boolean
+      - enum_lookup
+      - link_lookup
+      title: Transform
+      type: string
+    Workspace:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        status:
+          allOf:
+          - $ref: '#/components/schemas/WorkspaceStatusEnum'
+          readOnly: true
+        timezone:
+          type: string
+          readOnly: true
+        currency:
+          type: string
+          readOnly: true
+        organization_name:
+          type: string
+          readOnly: true
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - currency
+      - id
+      - name
+      - organization_name
+      - role
+      - slug
+      - status
+      - timezone
+    WorkspaceCreateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        organization_name:
+          type: string
+          minLength: 1
+          maxLength: 120
+      required:
+      - name
+    WorkspaceStatusEnum:
+      enum:
+      - setup
+      - active
+      - archived
+      type: string
+      description: |-
+        * `setup` - Being set up
+        * `active` - Active
+        * `archived` - Archived
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

@@ -33,6 +33,8 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "apps.accounts",
     "apps.core",
+    "apps.tenancy",
+    "apps.schema_registry",
 ]
 
 MIDDLEWARE = [
@@ -109,6 +111,8 @@ REST_FRAMEWORK = {
     # Money and decimals travel as strings, never floats (ADR-25).
     "COERCE_DECIMAL_TO_STRING": True,
     "DATETIME_FORMAT": "iso-8601",
+    # One error shape everywhere: code, plain-language message, field details.
+    "EXCEPTION_HANDLER": "apps.core.exceptions.api_exception_handler",
 }
 
 SPECTACULAR_SETTINGS = {
@@ -121,6 +125,8 @@ SPECTACULAR_SETTINGS = {
         "rest_framework.permissions.AllowAny" if DEBUG else "rest_framework.permissions.IsAdminUser"
     ],
     "COMPONENT_SPLIT_REQUEST": True,
+    # 3.1 so the SSD models (Pydantic, JSON Schema 2020-12) can be published as-is.
+    "OAS_VERSION": "3.1.0",
 }
 
 CELERY_BROKER_URL = env("REDIS_URL", default="redis://localhost:6379/0")

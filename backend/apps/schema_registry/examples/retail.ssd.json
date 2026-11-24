@@ -1,0 +1,267 @@
+{
+  "spec_version": "1.0",
+  "tables": [
+    {
+      "id": "tbl_customers",
+      "key": "customers",
+      "label": "Customers",
+      "description": "People and businesses who buy from the shop.",
+      "icon": "users",
+      "fields": [
+        {
+          "id": "fld_customer_name",
+          "key": "name",
+          "label": "Name",
+          "type": "text",
+          "required": true,
+          "max_length": 120,
+          "display_role": "title",
+          "provenance": {"origin": "manual", "source_file": "ade_sales_2026.xlsx", "source_column": "Customer"}
+        },
+        {
+          "id": "fld_customer_phone",
+          "key": "phone",
+          "label": "Phone",
+          "type": "text",
+          "unique": true,
+          "max_length": 20
+        },
+        {
+          "id": "fld_customer_area",
+          "key": "area",
+          "label": "Area",
+          "description": "Neighbourhood or market where the customer is based.",
+          "type": "text",
+          "max_length": 80
+        },
+        {
+          "id": "fld_customer_credit_limit",
+          "key": "credit_limit",
+          "label": "Credit limit",
+          "description": "The most this customer may owe at once.",
+          "type": "decimal",
+          "precision": 14,
+          "scale": 2,
+          "currency": "NGN",
+          "min_value": "0",
+          "display_role": "money"
+        }
+      ]
+    },
+    {
+      "id": "tbl_products",
+      "key": "products",
+      "label": "Products",
+      "description": "Things the shop sells.",
+      "icon": "package",
+      "fields": [
+        {
+          "id": "fld_product_name",
+          "key": "name",
+          "label": "Name",
+          "type": "text",
+          "required": true,
+          "unique": true,
+          "max_length": 120,
+          "display_role": "title"
+        },
+        {
+          "id": "fld_product_sku",
+          "key": "sku",
+          "label": "Product code",
+          "type": "text",
+          "unique": true,
+          "max_length": 40
+        },
+        {
+          "id": "fld_product_category",
+          "key": "category",
+          "label": "Category",
+          "type": "enum",
+          "required": true,
+          "default": "provisions",
+          "options": [
+            {"key": "provisions", "label": "Provisions"},
+            {"key": "beverages", "label": "Beverages"},
+            {"key": "toiletries", "label": "Toiletries"},
+            {"key": "household", "label": "Household"},
+            {"key": "other", "label": "Other"}
+          ]
+        },
+        {
+          "id": "fld_product_unit_price",
+          "key": "unit_price",
+          "label": "Unit price",
+          "type": "decimal",
+          "required": true,
+          "precision": 14,
+          "scale": 2,
+          "currency": "NGN",
+          "min_value": "0",
+          "display_role": "money"
+        },
+        {
+          "id": "fld_product_stock_quantity",
+          "key": "stock_quantity",
+          "label": "In stock",
+          "type": "integer",
+          "required": true,
+          "default": 0,
+          "min_value": "0",
+          "display_role": "quantity"
+        },
+        {
+          "id": "fld_product_reorder_level",
+          "key": "reorder_level",
+          "label": "Reorder when below",
+          "description": "Stock level that should trigger a low-stock warning.",
+          "type": "integer",
+          "min_value": "0",
+          "display_role": "quantity"
+        }
+      ]
+    },
+    {
+      "id": "tbl_sales",
+      "key": "sales",
+      "label": "Sales",
+      "description": "Each sale of a product, with what was paid.",
+      "icon": "receipt",
+      "fields": [
+        {
+          "id": "fld_sale_date",
+          "key": "sale_date",
+          "label": "Date",
+          "type": "date",
+          "required": true,
+          "display_role": "date"
+        },
+        {
+          "id": "fld_sale_customer",
+          "key": "customer",
+          "label": "Customer",
+          "description": "Leave empty for a walk-in customer.",
+          "type": "reference"
+        },
+        {
+          "id": "fld_sale_product",
+          "key": "product",
+          "label": "Product",
+          "type": "reference",
+          "required": true
+        },
+        {
+          "id": "fld_sale_quantity",
+          "key": "quantity",
+          "label": "Quantity",
+          "type": "integer",
+          "required": true,
+          "min_value": "1",
+          "display_role": "quantity"
+        },
+        {
+          "id": "fld_sale_unit_price",
+          "key": "unit_price",
+          "label": "Unit price",
+          "type": "decimal",
+          "required": true,
+          "precision": 14,
+          "scale": 2,
+          "currency": "NGN",
+          "min_value": "0",
+          "display_role": "money"
+        },
+        {
+          "id": "fld_sale_total_amount",
+          "key": "total_amount",
+          "label": "Total",
+          "type": "decimal",
+          "required": true,
+          "precision": 14,
+          "scale": 2,
+          "currency": "NGN",
+          "min_value": "0",
+          "display_role": "money"
+        },
+        {
+          "id": "fld_sale_amount_paid",
+          "key": "amount_paid",
+          "label": "Amount paid",
+          "type": "decimal",
+          "required": true,
+          "default": "0.00",
+          "precision": 14,
+          "scale": 2,
+          "currency": "NGN",
+          "min_value": "0",
+          "display_role": "money"
+        },
+        {
+          "id": "fld_sale_payment_status",
+          "key": "payment_status",
+          "label": "Payment",
+          "type": "enum",
+          "required": true,
+          "default": "unpaid",
+          "display_role": "status",
+          "options": [
+            {"key": "paid", "label": "Paid"},
+            {"key": "part_paid", "label": "Part paid"},
+            {"key": "unpaid", "label": "Owing"}
+          ]
+        },
+        {
+          "id": "fld_sale_payment_method",
+          "key": "payment_method",
+          "label": "Paid by",
+          "type": "enum",
+          "options": [
+            {"key": "cash", "label": "Cash"},
+            {"key": "transfer", "label": "Bank transfer"},
+            {"key": "pos", "label": "POS"}
+          ]
+        },
+        {
+          "id": "fld_sale_notes",
+          "key": "notes",
+          "label": "Notes",
+          "type": "text",
+          "max_length": 500
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "rel_sale_customer",
+      "from_table": "tbl_sales",
+      "from_field": "fld_sale_customer",
+      "to_table": "tbl_customers",
+      "cardinality": "many_to_one",
+      "optional": true,
+      "on_delete": "restrict",
+      "description": "Each sale may belong to one customer"
+    },
+    {
+      "id": "rel_sale_product",
+      "from_table": "tbl_sales",
+      "from_field": "fld_sale_product",
+      "to_table": "tbl_products",
+      "cardinality": "many_to_one",
+      "optional": false,
+      "on_delete": "restrict",
+      "description": "Each sale is for one product"
+    }
+  ],
+  "source_mappings": [
+    {"id": "map_sales_date", "source_file": "ade_sales_2026.xlsx", "sheet": "Sales", "column": "Date", "table": "tbl_sales", "field": "fld_sale_date", "transform": "parse_date_day_first"},
+    {"id": "map_sales_customer", "source_file": "ade_sales_2026.xlsx", "sheet": "Sales", "column": "Customer", "table": "tbl_sales", "field": "fld_sale_customer", "transform": "link_lookup"},
+    {"id": "map_sales_item", "source_file": "ade_sales_2026.xlsx", "sheet": "Sales", "column": "Item", "table": "tbl_sales", "field": "fld_sale_product", "transform": "link_lookup"},
+    {"id": "map_sales_qty", "source_file": "ade_sales_2026.xlsx", "sheet": "Sales", "column": "Qty", "table": "tbl_sales", "field": "fld_sale_quantity", "transform": "parse_integer"},
+    {"id": "map_sales_price", "source_file": "ade_sales_2026.xlsx", "sheet": "Sales", "column": "Price", "table": "tbl_sales", "field": "fld_sale_unit_price", "transform": "parse_money"},
+    {"id": "map_sales_amount", "source_file": "ade_sales_2026.xlsx", "sheet": "Sales", "column": "Amount", "table": "tbl_sales", "field": "fld_sale_total_amount", "transform": "parse_money"},
+    {"id": "map_sales_paid", "source_file": "ade_sales_2026.xlsx", "sheet": "Sales", "column": "Paid", "table": "tbl_sales", "field": "fld_sale_amount_paid", "transform": "parse_money"},
+    {"id": "map_customer_name", "source_file": "ade_sales_2026.xlsx", "sheet": "Sales", "column": "Customer", "table": "tbl_customers", "field": "fld_customer_name", "transform": "trim"},
+    {"id": "map_product_name", "source_file": "ade_sales_2026.xlsx", "sheet": "Sales", "column": "Item", "table": "tbl_products", "field": "fld_product_name", "transform": "trim"}
+  ]
+}

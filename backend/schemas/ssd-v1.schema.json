@@ -1,0 +1,609 @@
+{
+  "$defs": {
+    "Cardinality": {
+      "enum": [
+        "many_to_one",
+        "one_to_one"
+      ],
+      "title": "Cardinality",
+      "type": "string"
+    },
+    "DeletePolicy": {
+      "enum": [
+        "restrict",
+        "cascade",
+        "set_null"
+      ],
+      "title": "DeletePolicy",
+      "type": "string"
+    },
+    "DisplayRole": {
+      "description": "How the UI, reports and insights should treat a field.",
+      "enum": [
+        "title",
+        "money",
+        "quantity",
+        "status",
+        "date"
+      ],
+      "title": "DisplayRole",
+      "type": "string"
+    },
+    "EnumOption": {
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "maxLength": 63,
+          "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$",
+          "title": "Key",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "label"
+      ],
+      "title": "EnumOption",
+      "type": "object"
+    },
+    "FieldDef": {
+      "additionalProperties": false,
+      "properties": {
+        "currency": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Z]{3}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Currency"
+        },
+        "default": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Default"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "display_role": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DisplayRole"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "id": {
+          "pattern": "^fld_[a-z0-9_]{3,48}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "key": {
+          "maxLength": 63,
+          "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$",
+          "title": "Key",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "max_length": {
+          "anyOf": [
+            {
+              "maximum": 10000,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Length"
+        },
+        "max_value": {
+          "anyOf": [
+            {
+              "pattern": "^-?\\d{1,28}(\\.\\d{1,10})?$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Value"
+        },
+        "min_value": {
+          "anyOf": [
+            {
+              "pattern": "^-?\\d{1,28}(\\.\\d{1,10})?$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Min Value"
+        },
+        "options": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/EnumOption"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Options"
+        },
+        "precision": {
+          "anyOf": [
+            {
+              "maximum": 28,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Precision"
+        },
+        "provenance": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Provenance"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "required": {
+          "default": false,
+          "title": "Required",
+          "type": "boolean"
+        },
+        "scale": {
+          "anyOf": [
+            {
+              "maximum": 10,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Scale"
+        },
+        "type": {
+          "$ref": "#/$defs/LogicalType"
+        },
+        "unique": {
+          "default": false,
+          "title": "Unique",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "key",
+        "label",
+        "type"
+      ],
+      "title": "FieldDef",
+      "type": "object"
+    },
+    "LogicalType": {
+      "enum": [
+        "text",
+        "integer",
+        "decimal",
+        "boolean",
+        "date",
+        "datetime",
+        "enum",
+        "reference"
+      ],
+      "title": "LogicalType",
+      "type": "string"
+    },
+    "Provenance": {
+      "additionalProperties": false,
+      "description": "Where a field came from: who proposed it and from which source column.",
+      "properties": {
+        "note": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Note"
+        },
+        "origin": {
+          "default": "manual",
+          "enum": [
+            "manual",
+            "ai",
+            "import"
+          ],
+          "title": "Origin",
+          "type": "string"
+        },
+        "source_column": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Column"
+        },
+        "source_file": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source File"
+        }
+      },
+      "title": "Provenance",
+      "type": "object"
+    },
+    "Relationship": {
+      "additionalProperties": false,
+      "description": "A link from a reference field on one table to a record in another.\n\n``to_field`` is omitted when the link points at the target record itself (the usual\ncase); when set, it must be a unique field on the target table.",
+      "properties": {
+        "cardinality": {
+          "$ref": "#/$defs/Cardinality",
+          "default": "many_to_one"
+        },
+        "description": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "from_field": {
+          "pattern": "^fld_[a-z0-9_]{3,48}$",
+          "title": "From Field",
+          "type": "string"
+        },
+        "from_table": {
+          "pattern": "^tbl_[a-z0-9_]{3,48}$",
+          "title": "From Table",
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^rel_[a-z0-9_]{3,48}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "on_delete": {
+          "$ref": "#/$defs/DeletePolicy",
+          "default": "restrict"
+        },
+        "optional": {
+          "title": "Optional",
+          "type": "boolean"
+        },
+        "to_field": {
+          "anyOf": [
+            {
+              "pattern": "^fld_[a-z0-9_]{3,48}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "To Field"
+        },
+        "to_table": {
+          "pattern": "^tbl_[a-z0-9_]{3,48}$",
+          "title": "To Table",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "from_table",
+        "from_field",
+        "to_table",
+        "optional",
+        "description"
+      ],
+      "title": "Relationship",
+      "type": "object"
+    },
+    "SourceMapping": {
+      "additionalProperties": false,
+      "description": "Links one column of an uploaded file to a field (spec section 8).",
+      "properties": {
+        "column": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Column",
+          "type": "string"
+        },
+        "field": {
+          "pattern": "^fld_[a-z0-9_]{3,48}$",
+          "title": "Field",
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^map_[a-z0-9_]{3,48}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "sheet": {
+          "anyOf": [
+            {
+              "maxLength": 120,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sheet"
+        },
+        "source_file": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Source File",
+          "type": "string"
+        },
+        "table": {
+          "pattern": "^tbl_[a-z0-9_]{3,48}$",
+          "title": "Table",
+          "type": "string"
+        },
+        "transform": {
+          "$ref": "#/$defs/Transform",
+          "default": "none"
+        }
+      },
+      "required": [
+        "id",
+        "source_file",
+        "column",
+        "table",
+        "field"
+      ],
+      "title": "SourceMapping",
+      "type": "object"
+    },
+    "Table": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "fields": {
+          "items": {
+            "$ref": "#/$defs/FieldDef"
+          },
+          "maxItems": 200,
+          "minItems": 1,
+          "title": "Fields",
+          "type": "array"
+        },
+        "icon": {
+          "anyOf": [
+            {
+              "maxLength": 64,
+              "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Icon"
+        },
+        "id": {
+          "pattern": "^tbl_[a-z0-9_]{3,48}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "key": {
+          "maxLength": 63,
+          "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$",
+          "title": "Key",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "key",
+        "label",
+        "fields"
+      ],
+      "title": "Table",
+      "type": "object"
+    },
+    "Transform": {
+      "description": "Deterministic transforms applied to a source value during import (Phase 4).",
+      "enum": [
+        "none",
+        "trim",
+        "parse_integer",
+        "parse_decimal",
+        "parse_money",
+        "parse_date_day_first",
+        "parse_date_month_first",
+        "parse_datetime",
+        "parse_boolean",
+        "enum_lookup",
+        "link_lookup"
+      ],
+      "title": "Transform",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "A complete Syntropy Schema Definition document.",
+  "properties": {
+    "relationships": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/Relationship"
+      },
+      "maxItems": 500,
+      "title": "Relationships",
+      "type": "array"
+    },
+    "source_mappings": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/SourceMapping"
+      },
+      "maxItems": 5000,
+      "title": "Source Mappings",
+      "type": "array"
+    },
+    "spec_version": {
+      "const": "1.0",
+      "title": "Spec Version",
+      "type": "string"
+    },
+    "status": {
+      "default": "draft",
+      "enum": [
+        "draft",
+        "published",
+        "superseded"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "tables": {
+      "items": {
+        "$ref": "#/$defs/Table"
+      },
+      "maxItems": 100,
+      "minItems": 1,
+      "title": "Tables",
+      "type": "array"
+    },
+    "version": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Version"
+    },
+    "workspace_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Workspace Id"
+    }
+  },
+  "required": [
+    "spec_version",
+    "tables"
+  ],
+  "title": "SSD",
+  "type": "object"
+}

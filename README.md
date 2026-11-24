@@ -8,8 +8,12 @@ The single source of truth for what to build is [`docs/syntropy-spec.md`](docs/s
 
 ## Status
 
-**Phase 0 — Foundation.** Monorepo, Docker Compose (PostgreSQL, Redis, MinIO), Django + DRF,
-React + Vite, CI, test harness and design tokens. Exit gate: all checks green.
+**Phase 1 — Schema registry.** SSD v1 as Pydantic models with an exported JSON Schema; a
+versioned registry with immutable published snapshots; organizations, workspaces,
+memberships and the workspace resolver; the hand-written retail SSD. Exit gate: retail SSD
+valid. See [`docs/ssd.md`](docs/ssd.md).
+
+Phase 0 (foundation: monorepo, Compose, CI, test harness, design tokens) passed its gate.
 
 ## Repository layout
 
@@ -44,6 +48,7 @@ pip install -r requirements-dev.txt
 Copy-Item .env.example .env
 python manage.py migrate
 python manage.py createsuperuser   # optional, for /admin
+python manage.py seed_retail_example <your-username>   # optional example workspace
 python manage.py runserver         # http://localhost:8000/api/health/
 
 # 3. Frontend (in a second terminal)
