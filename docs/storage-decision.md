@@ -4,14 +4,14 @@ Phase 2 exit gate ("Benchmark done"), 24 November 2026. Raw numbers:
 [benchmarks/storage-benchmark.md](benchmarks/storage-benchmark.md). Re-run any time with
 `python manage.py run_storage_benchmark` (about a minute; it uses a throwaway database).
 
-## Recommendation
+## Decision
 
-**Keep JSONB records for the MVP** (ADR-08 → Agreed for the MVP), keep schema-per-workspace
-tables (ADR-09) as the fallback behind the storage adapter, and re-run the benchmark in
-Phase 5 with real data volumes.
+**Keep JSONB records for the MVP and add database-side type checks** (ADR-08 → Agreed for the
+MVP). Schema-per-workspace tables (ADR-09) stay as the fallback behind the storage adapter,
+and the benchmark is re-run in Phase 5 with real data volumes.
 
-Status: **recommended, awaiting Sola's decision.** The spec's decision register is updated
-in this PR to match; it changes if the decision goes the other way.
+Decided by Sola on 24 November 2026, after a follow-up experiment measured the type checks
+(below). The trigger ships in its own PR.
 
 ## What was compared
 
@@ -57,10 +57,14 @@ workspaces of 500 sales each) through the same validation code on PostgreSQL 16:
 
 ## What JSONB costs us, and the mitigations
 
-* **No database-side type or required-field checks.** The app validates every write, and
-  the database already enforces the shape (flat object, `fld_` keys, scalars only), identity,
-  links, cardinality and uniqueness. Follow-up option: a validation trigger compiled from each
-  published schema version, which closes the gap at some write cost.
+* **No database-side type or required-field checks, until the follow-up trigger lands.** The
+  app validates every write, and the database already enforces the shape (flat object, `fld_`
+  keys, scalars only), identity, links, cardinality and uniqueness. The agreed fix is a
+  validation trigger compiled from each published schema version. A prototype refused wrong
+  types, missing required values, invalid enum values and out-of-range numbers. It left report
+  times unchanged (reads don't run it), made a 10,000-sale import 5–20% slower, and made single
+  creates no slower. Single edits went from about 4 ms to 9–11 ms; the follow-up PR investigates
+  that.
 * **Reports are 2–9x slower.** Add expression indexes on hot JSONB fields only when query
   plans justify them (spec section 9), and revisit at Phase 5.
 * **Stale planner statistics hurt more on one big shared table.** The benchmark found that

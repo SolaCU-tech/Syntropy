@@ -88,7 +88,7 @@ ADR-01 to ADR-14 come from the SRS; ADR-15 onward were added on 24 November 2026
 | ADR-05 | Independent generation QA, separate from recommendation/adaptation | Agreed |
 | ADR-06 | AI-adaptive schemas: AI proposes, business approves, backend validates and executes | Agreed |
 | ADR-07 | Versioned, storage-independent logical schema spec (SSD) and registry | Agreed direction |
-| ADR-08 | JSONB business records plus native relational metadata and links for the first prototype | Recommended for the MVP after the Phase 2 benchmark (24 Nov 2026; `docs/storage-decision.md`); awaiting Sola's confirmation. Was Provisional |
+| ADR-08 | JSONB business records plus native relational metadata and links for the first prototype | Agreed for the MVP (24 Nov 2026, after the Phase 2 benchmark; `docs/storage-decision.md`), with a database trigger that checks types and required fields against the published schema. Was Provisional |
 | ADR-09 | Dynamic physical tables / schema-per-tenant kept as an alternative | Fallback behind the storage adapter; benchmarked faster but not adopted for the MVP; revisit at Phase 5 (`docs/storage-decision.md`). Was Under evaluation |
 | ADR-10 | Modular Django monolith plus async workers; no premature microservices | Recommended baseline |
 | ADR-11 | Gemini API as candidate provider; a consumer subscription does not cover API use | Candidate; verify pricing and terms |
@@ -263,7 +263,7 @@ The SSD is the canonical, versioned JSON description of a workspace's structure,
 
 ## 9. Data storage, integrity and indexing
 
-The first prototype stores business records as JSONB rows with relational link rows (ADR-08, recommended for the MVP after the Phase 2 benchmark), behind a storage adapter that can later switch to real per-tenant tables.
+The first prototype stores business records as JSONB rows with relational link rows (ADR-08, agreed for the MVP after the Phase 2 benchmark), behind a storage adapter that can later switch to real per-tenant tables.
 
 **Provisional JSONB-relational hybrid** (SRS §7.1). Platform metadata lives in ordinary tables. Each business record is one row in a shared `business_records` table: immutable record UUID, `workspace_id`, logical `table_id`, JSONB scalar values, version number and timestamps. Links live authoritatively in a relational `record_relationships` table. Never store a whole business database as one JSON document.
 
@@ -759,7 +759,7 @@ The storage benchmark and the AI provider check are the two open items that bloc
 
 | Item | Question / next action | Needed by |
 | --- | --- | --- |
-| Storage | Benchmark run 24 Nov 2026: both designs pass correctness; physical is 2–9x faster on reports; JSONB recommended for the MVP (`docs/storage-decision.md`), awaiting Sola's confirmation | Phase 2 (done) |
+| Storage | Benchmark run 24 Nov 2026: both designs pass correctness; physical is 2–9x faster on reports; JSONB agreed for the MVP with database type checks (`docs/storage-decision.md`) | Phase 2 (done) |
 | Relationship representation | Done: one link row per source record and relationship, partial unique index for one_to_one, composite (workspace, table, record) foreign keys, RESTRICT in the database | Phase 2 (done) |
 | Unique constraints | Done: unique-value registry with a unique index and INSERT … ON CONFLICT claims; text ignores case and extra spaces | Phase 2 (done) |
 | AI provider | Verify Gemini API tier, cost, rate limits, privacy terms and a fallback model | Phase 4 |
