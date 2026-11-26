@@ -109,7 +109,7 @@ ADR-01 to ADR-14 come from the SRS; ADR-15 to ADR-27 were added on 24 November 2
 | ADR-25 | Money and decimals travel as strings in the API and are never JS floats | Agreed (follows SRS §7.3) |
 | ADR-26 | OpenAPI schema (drf-spectacular) generates the frontend's TypeScript types | Recommended |
 | ADR-27 | Offline sync uses client-generated record UUIDs, idempotency keys and optimistic concurrency | Recommended |
-| ADR-28 | Colour direction "Midnight Navy & Champagne, with Teal Intelligence": navy is the dominant brand colour, gold a sparing accent, teal marks AI and analytical content, the workspace stays light; AI suggestions, extracted facts and verified records look different (section 14) | Agreed (26 Nov 2026); replaces ADR-15. Exact hex values Recommended until reviewed in the app |
+| ADR-28 | Colour direction "Midnight Navy & Champagne, with Teal Intelligence": navy is the dominant brand colour, gold a sparing accent, teal marks AI and analytical content, the workspace stays light; AI suggestions, extracted facts and verified records look different (section 14) | Agreed (26 Nov 2026), including the hex values in section 14; replaces ADR-15. Success green and warning amber stay as they are and are revisited once real screens exist |
 
 ## 5. Users, roles and scope
 
@@ -444,7 +444,7 @@ Syntropy is the calm organizer: clean, light and trustworthy. The colour directi
 - Sentence case everywhere; buttons are verbs ("Build my workspace", "Approve change").
 - Anything AI-made carries a sparkle marker and the word "Suggested"; values read from a file say "Extracted"; values a person confirmed say "Verified" (see provenance styles below).
 
-**Colour tokens** (light theme; dark tokens defined, shipped later). Hex values are Recommended until Sola has reviewed them in the app.
+**Colour tokens** (light theme; dark tokens defined, shipped later). Light values Agreed on 26 November 2026. Success and Warning sit close to AI teal and Gold; they stay as they are for now and are revisited once real screens exist.
 
 | Token | Hex | Use |
 | --- | --- | --- |
