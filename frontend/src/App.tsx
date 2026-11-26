@@ -1,15 +1,19 @@
 import { useEffect, useState } from 'react'
-import { CheckCircle2, CircleAlert, Loader2, Sparkles } from 'lucide-react'
+import { CheckCircle2, CircleAlert, Loader2 } from 'lucide-react'
 
 import { getHealth, type Health } from '@/api/client'
 import { Button } from '@/components/ui/button'
+import { ProvenanceBadge, provenanceValue } from '@/components/ui/provenance'
 
 type ApiState = { kind: 'loading' } | { kind: 'ready'; health: Health } | { kind: 'offline' }
 
 const swatches = [
+  { name: 'Brand navy', className: 'bg-brand' },
   { name: 'Primary', className: 'bg-primary' },
   { name: 'Primary soft', className: 'bg-secondary' },
-  { name: 'AI violet', className: 'bg-ai' },
+  { name: 'Gold', className: 'bg-gold' },
+  { name: 'Champagne', className: 'bg-champagne' },
+  { name: 'AI teal', className: 'bg-ai' },
   { name: 'Success', className: 'bg-success' },
   { name: 'Warning', className: 'bg-warning' },
   { name: 'Danger', className: 'bg-danger' },
@@ -35,11 +39,10 @@ function App() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col gap-8 px-4 py-12">
-      <header className="flex flex-col gap-2">
-        <h1 className="text-3xl font-semibold text-ink">Syntropy</h1>
-        <p className="text-base text-text-secondary">
-          Turn scattered business records into order. This is the Phase 0 foundation screen.
-        </p>
+      <header className="flex flex-col gap-2 rounded-xl bg-brand p-6 text-on-brand">
+        <h1 className="text-3xl font-semibold text-champagne-on-brand">Syntropy</h1>
+        <span className="h-0.5 w-12 rounded-full bg-gold" aria-hidden="true" />
+        <p className="text-base">Turn scattered business records into order. This is the foundation screen.</p>
       </header>
 
       <section aria-labelledby="status-heading" className="rounded-lg border bg-surface p-6 shadow-sm">
@@ -70,12 +73,29 @@ function App() {
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <Button>Build my workspace</Button>
           <Button variant="outline">Add records</Button>
-          <span className="inline-flex items-center gap-1 rounded-md bg-ai-soft px-2 py-1 text-xs font-medium text-ai">
-            <Sparkles className="size-3.5" aria-hidden="true" />
-            Suggested
-          </span>
           <span className="tabular font-medium">₦1,200,000.00</span>
         </div>
+        <p className="mt-6 mb-2 text-text-secondary">Where values came from</p>
+        <ul className="flex flex-col gap-2">
+          <li className="flex items-center gap-3">
+            <ProvenanceBadge provenance="suggested" />
+            <span>
+              Category: <span className={provenanceValue({ provenance: 'suggested' })}>Beverages</span>
+            </span>
+          </li>
+          <li className="flex items-center gap-3">
+            <ProvenanceBadge provenance="extracted" source="sales-may.xlsx" />
+            <span>
+              Amount: <span className={`tabular ${provenanceValue({ provenance: 'extracted' })}`}>₦45,500.00</span>
+            </span>
+          </li>
+          <li className="flex items-center gap-3">
+            <ProvenanceBadge provenance="verified" />
+            <span>
+              Customer: <span className={provenanceValue({ provenance: 'verified' })}>Adaeze Okafor</span>
+            </span>
+          </li>
+        </ul>
       </section>
     </main>
   )
