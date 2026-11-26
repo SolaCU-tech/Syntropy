@@ -27,29 +27,22 @@ function contrast(a: string, b: string): number {
 
 describe('design tokens', () => {
   it('match the spec values', () => {
-    expect({
-      primary: token('primary'),
-      'primary-hover': token('primary-hover'),
-      'primary-soft': token('primary-soft'),
-      ai: token('ai'),
-      'ai-soft': token('ai-soft'),
-      ink: token('ink'),
-      'text-secondary': token('text-secondary'),
-      'text-muted': token('text-muted'),
-      canvas: token('canvas'),
-      surface: token('surface'),
-      border: token('border'),
-      success: token('success'),
-      'success-text': token('success-text'),
-      warning: token('warning'),
-      'warning-text': token('warning-text'),
-      danger: token('danger'),
-    }).toEqual({
-      primary: '#0e7c6b',
-      'primary-hover': '#0a6658',
-      'primary-soft': '#e6f4f1',
-      ai: '#6957cf',
-      'ai-soft': '#efecfb',
+    const names = [
+      'primary', 'primary-hover', 'primary-soft', 'brand', 'gold', 'gold-text', 'champagne',
+      'champagne-on-brand', 'ai', 'ai-soft', 'ink', 'text-secondary', 'text-muted', 'canvas',
+      'surface', 'border', 'success', 'success-text', 'warning', 'warning-text', 'danger',
+    ]
+    expect(Object.fromEntries(names.map((n) => [n, token(n)]))).toEqual({
+      primary: '#1d3a6b',
+      'primary-hover': '#142b52',
+      'primary-soft': '#e9eef6',
+      brand: '#0b1a33',
+      gold: '#b8913a',
+      'gold-text': '#86672a',
+      champagne: '#f5eedc',
+      'champagne-on-brand': '#e8d7a8',
+      ai: '#0e7c6b',
+      'ai-soft': '#e6f4f1',
       ink: '#0f1b2d',
       'text-secondary': '#526077',
       'text-muted': '#667186',
@@ -64,9 +57,9 @@ describe('design tokens', () => {
     })
   })
 
-  it('keeps violet out of the chart palette', () => {
+  it('keeps AI teal out of the chart palette', () => {
     const chart = [1, 2, 3, 4, 5, 6].map((n) => token(`chart-${n}`))
-    expect(chart).toEqual(['#0e7c6b', '#2f6fdb', '#e0a100', '#e4572e', '#5b6b82', '#4c9a2a'])
+    expect(chart).toEqual(['#1d3a6b', '#4a9be8', '#e0b04a', '#b23a48', '#7e57c2', '#8a96a8'])
     expect(chart).not.toContain(token('ai'))
   })
 
@@ -79,8 +72,15 @@ describe('design tokens', () => {
     ['white button text on primary hover', 'surface', 'primary-hover'],
     ['primary link on surface', 'primary', 'surface'],
     ['primary link on canvas', 'primary', 'canvas'],
-    ['AI violet on surface', 'ai', 'surface'],
-    ['AI violet on AI soft', 'ai', 'ai-soft'],
+    ['AI teal on surface', 'ai', 'surface'],
+    ['AI teal on AI soft', 'ai', 'ai-soft'],
+    ['navy on primary soft (Verified badge)', 'primary', 'primary-soft'],
+    ['gold text on surface', 'gold-text', 'surface'],
+    ['gold text on canvas', 'gold-text', 'canvas'],
+    ['gold text on champagne', 'gold-text', 'champagne'],
+    ['white text on brand navy', 'on-brand', 'brand'],
+    ['champagne text on brand navy', 'champagne-on-brand', 'brand'],
+    ['gold on brand navy', 'gold', 'brand'],
     ['muted text on surface', 'text-muted', 'surface'],
     ['muted text on canvas', 'text-muted', 'canvas'],
     ['success text on surface', 'success-text', 'surface'],

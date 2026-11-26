@@ -72,12 +72,13 @@ Syntropy has changed shape three times; the hosted SaaS is the current, agreed d
 - **Jinja2 code generation** → no code is generated; the SSD drives a shared runtime.
 - **Raw Access (.accdb/.mdb) parsing** → not planned. CSV and XLSX are the inputs; Access users export first.
 - **Guided setup wizard as a later add-on** → absorbed into the onboarding flow (section 16).
+- **Teal as the primary colour, violet for AI** (ADR-15) → replaced by navy as the brand colour, gold as the accent and teal for AI and analysis (ADR-28). Violet no longer has a special meaning.
 
 **Kept from earlier stages:** the user always reviews uncertain AI output before it becomes fact; column names are sanitized into safe machine keys; spreadsheet cells are treated as untrusted (CSV/formula injection); money is never a float.
 
 ## 4. Decision register
 
-ADR-01 to ADR-14 come from the SRS; ADR-15 onward were added on 24 November 2026.
+ADR-01 to ADR-14 come from the SRS; ADR-15 to ADR-27 were added on 24 November 2026, and ADR-28 on 26 November 2026.
 
 | ID | Decision | Status |
 | --- | --- | --- |
@@ -95,7 +96,7 @@ ADR-01 to ADR-14 come from the SRS; ADR-15 onward were added on 24 November 2026
 | ADR-12 | Django ORM for platform entities; storage adapter for dynamic business records | Recommended baseline |
 | ADR-13 | Forms, queries, reports and dashboards are core workspace capabilities | Agreed |
 | ADR-14 | No interruptions during AI generation; review before activation when ambiguity or data risk warrants it | Agreed; review rule defined in ADR-17 |
-| ADR-15 | Primary colour teal; violet reserved exclusively for AI-generated content | Agreed (teal "for now") |
+| ADR-15 | Primary colour teal; violet reserved exclusively for AI-generated content | Superseded by ADR-28 (26 Nov 2026). Was Agreed (teal "for now") |
 | ADR-16 | Navigation labels: Home, Tables, Forms, Ask, Reports, Suggestions, Imports, Activity, Settings | Agreed; replaces SRS §8 names |
 | ADR-17 | Review rule: "must decide" items block activation; low-risk choices auto-apply and are listed as undoable assumptions | Agreed; closes SRS open item "Review UX" |
 | ADR-18 | Natural-language Ask (FR-14) is in the MVP | Agreed; was "Next" |
@@ -108,6 +109,7 @@ ADR-01 to ADR-14 come from the SRS; ADR-15 onward were added on 24 November 2026
 | ADR-25 | Money and decimals travel as strings in the API and are never JS floats | Agreed (follows SRS §7.3) |
 | ADR-26 | OpenAPI schema (drf-spectacular) generates the frontend's TypeScript types | Recommended |
 | ADR-27 | Offline sync uses client-generated record UUIDs, idempotency keys and optimistic concurrency | Recommended |
+| ADR-28 | Colour direction "Midnight Navy & Champagne, with Teal Intelligence": navy is the dominant brand colour, gold a sparing accent, teal marks AI and analytical content, the workspace stays light; AI suggestions, extracted facts and verified records look different (section 14) | Agreed (26 Nov 2026); replaces ADR-15. Exact hex values Recommended until reviewed in the app |
 
 ## 5. Users, roles and scope
 
@@ -418,7 +420,17 @@ Staff can create and edit records through forms with no connection; changes queu
 
 ## 14. Product identity and visual language
 
-Syntropy is the calm organizer: clean, light and friendly, teal for action and violet only for AI.
+Syntropy is the calm organizer: clean, light and trustworthy. The colour direction is **Midnight Navy & Champagne, with Teal Intelligence** (ADR-28).
+
+**Colour principles** (Agreed, 26 November 2026)
+
+1. Navy establishes trust. It is the dominant brand colour.
+2. Gold establishes distinction. It is used sparingly.
+3. Teal establishes intelligence. It identifies analytical and AI-related interactions.
+4. White establishes clarity. The actual workspace stays predominantly light.
+5. Typography establishes hierarchy. Avoid unnecessary decoration.
+6. Data establishes the interface. Tables, records, charts and forms are first-class citizens.
+7. Transparency establishes trust. AI-generated suggestions, extracted facts and verified records must look different.
 
 **Personality.** It takes a messy pile and hands back something tidy. Reassuring, plain-spoken, competent. It never makes an owner feel stupid.
 
@@ -430,17 +442,22 @@ Syntropy is the calm organizer: clean, light and friendly, teal for action and v
 - Honest uncertainty: "We're not sure whether 03/04 means 3 April or 4 March."
 - Local by default: ₦ first, day-first dates, Nigerian names in examples and empty states.
 - Sentence case everywhere; buttons are verbs ("Build my workspace", "Approve change").
-- Anything AI-made carries a sparkle marker and the word "Suggested."
+- Anything AI-made carries a sparkle marker and the word "Suggested"; values read from a file say "Extracted"; values a person confirmed say "Verified" (see provenance styles below).
 
-**Colour tokens** (light theme; dark tokens defined, shipped later)
+**Colour tokens** (light theme; dark tokens defined, shipped later). Hex values are Recommended until Sola has reviewed them in the app.
 
 | Token | Hex | Use |
 | --- | --- | --- |
-| Primary | #0E7C6B | Buttons, links, selection, active nav |
-| Primary hover | #0A6658 | Hover and pressed states |
-| Primary soft | #E6F4F1 | Selected rows, soft highlights |
-| AI violet | #6957CF | Only AI-generated content: suggestions, AI badges, Ask interpretations |
-| AI soft | #EFECFB | Background of AI badges and cards |
+| Primary (navy) | #1D3A6B | Buttons, links, selection, focus ring, active nav |
+| Primary hover | #142B52 | Hover and pressed states |
+| Primary soft | #E9EEF6 | Selected rows, soft highlights, Verified badge background |
+| Brand (midnight navy) | #0B1A33 | App chrome: sidebar, top bar, logo, sign-in panel |
+| Gold | #B8913A | Sparing accent fills, icons and rules (never body text on white; 5.9:1 on Brand) |
+| Gold text | #86672A | Gold wording on light backgrounds |
+| Champagne | #F5EEDC | Soft gold background for rare highlights (plan badge, milestone) |
+| Champagne on brand | #E8D7A8 | Text and the wordmark on Brand |
+| AI teal | #0E7C6B | Only AI and analytical content: suggestions, extracted values, Ask interpretations, insights |
+| AI soft | #E6F4F1 | Background of Suggested badges and cards |
 | Ink | #0F1B2D | Primary text |
 | Text secondary | #526077 | Supporting text |
 | Text muted | #667186 | Placeholders, captions |
@@ -453,9 +470,17 @@ Syntropy is the calm organizer: clean, light and friendly, teal for action and v
 | Warning text | #936807 | Warning wording (the bright amber is for fills and icons) |
 | Danger | #D23434 | Errors, low confidence, blocked |
 
-Contrast adjustment (Agreed, 24 November 2026): text muted, danger and AI violet were darkened, and success text and warning text were added, so that every text use meets WCAG AA (4.5:1) on Surface and Canvas. Use Success and Warning for fills and icons, and their text tokens for words.
+Contrast: every text use meets WCAG AA (4.5:1) on Surface and Canvas; `frontend/src/styles/tokens.test.ts` checks this. Use Success, Warning and Gold for fills and icons, and their text tokens for words. Teal is no longer an action colour: a teal button means "this is AI or analysis", so ordinary actions stay navy. Status colours always come with an icon and a word, so they are not confused with AI teal or brand gold.
 
-**Chart palette** (categorical, in order): teal #0E7C6B, blue #2F6FDB, amber #E0A100, coral #E4572E, slate #5B6B82, green #4C9A2A. Violet is excluded so charts never look like AI suggestions. Validate contrast and colour-blind separation before locking.
+**Provenance styles** (Agreed principle; styling Recommended). Three states must never look alike, and each differs by fill, border, icon and word, not colour alone:
+
+| State | Meaning | Badge | Value in a table cell |
+| --- | --- | --- | --- |
+| Suggested | AI made it; nobody has accepted it yet | AI soft fill, dashed AI teal border, sparkle icon, "Suggested" | AI soft background with a dashed teal underline |
+| Extracted | Read from an uploaded file or image; not yet checked | No fill, solid AI teal border, scan icon, "Extracted", source on hover | Dotted teal underline, source on hover |
+| Verified | Entered or confirmed by a person, or reconciled | Primary soft fill, navy text, check-badge icon, "Verified" | Plain ink; the badge appears only where provenance matters |
+
+**Chart palette** (categorical, in order): navy #1D3A6B, sky #4A9BE8, gold #E0B04A, crimson #B23A48, purple #7E57C2, slate #8A96A8. Teal is excluded so charts never look like AI suggestions. Checked with simulated protanopia, deuteranopia and tritanopia (smallest difference between any two colours: ΔE 14 under deuteranopia). Gold, sky and slate are lighter than 3:1 on white, so bars and lines carry labels or a darker outline.
 
 **Typography.** Inter for all UI, with tabular figures for numbers and money. JetBrains Mono only in technical mode (keys, IDs, query plans). Scale 12 / 14 / 16 / 20 / 24 / 30 px; tables and dense screens at 14px, reading screens at 16px; weights 400, 500, 600.
 
@@ -627,7 +652,7 @@ Insights are a first-class area: Ask, starter reports and insight cards ship in 
 **Ask** (MVP, ADR-18)
 
 - A question box on the Ask page and in the top bar, with example questions generated from the user's own tables ("Which products sold best in May?", "Who owes me the most?").
-- The answer shows an **interpretation strip** of editable chips (table, measure, filter, grouping, period), so the owner sees exactly what was computed and can adjust it without retyping. Chips use AI violet.
+- The answer shows an **interpretation strip** of editable chips (table, measure, filter, grouping, period), so the owner sees exactly what was computed and can adjust it without retyping. Chips use AI teal.
 - Then the auto-chosen chart and the result table, with **Save as report** and **Pin to Home**.
 - Ambiguous questions get a choice after asking ("Sales amount or number of sales?").
 - Unanswerable questions get an honest reply: "You don't track expenses yet." This can link to a suggestion to add them.

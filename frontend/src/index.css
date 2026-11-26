@@ -62,6 +62,12 @@
   --color-text-muted: var(--syn-text-muted);
   --color-canvas: var(--syn-canvas);
   --color-surface: var(--syn-surface);
+  --color-brand: var(--syn-brand);
+  --color-on-brand: var(--syn-on-brand);
+  --color-gold: var(--syn-gold);
+  --color-gold-text: var(--syn-gold-text);
+  --color-champagne: var(--syn-champagne);
+  --color-champagne-on-brand: var(--syn-champagne-on-brand);
   --color-ai: var(--syn-ai);
   --color-ai-soft: var(--syn-ai-soft);
   --color-success: var(--syn-success);
@@ -69,6 +75,15 @@
   --color-warning: var(--syn-warning);
   --color-warning-text: var(--syn-warning-text);
   --color-danger: var(--syn-danger);
+  --color-suggested: var(--syn-provenance-suggested-fg);
+  --color-suggested-bg: var(--syn-provenance-suggested-bg);
+  --color-suggested-border: var(--syn-provenance-suggested-border);
+  --color-extracted: var(--syn-provenance-extracted-fg);
+  --color-extracted-bg: var(--syn-provenance-extracted-bg);
+  --color-extracted-border: var(--syn-provenance-extracted-border);
+  --color-verified: var(--syn-provenance-verified-fg);
+  --color-verified-bg: var(--syn-provenance-verified-bg);
+  --color-verified-border: var(--syn-provenance-verified-border);
   --color-chart-1: var(--syn-chart-1);
   --color-chart-2: var(--syn-chart-2);
   --color-chart-3: var(--syn-chart-3);
