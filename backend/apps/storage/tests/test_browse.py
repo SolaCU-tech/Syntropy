@@ -189,3 +189,17 @@ def test_browsing_is_scoped_to_members(shop, client_for, make_user, workspace):
     assert browse(stranger, workspace, SALES).status_code == 404
     url = reverse("table-list", kwargs={"workspace_id": workspace.id})
     assert stranger.get(url).status_code == 404
+
+
+def test_seed_demo(settings, db):
+    from django.core.management import CommandError, call_command
+
+    settings.DEBUG = False
+    with pytest.raises(CommandError):
+        call_command("seed_demo")
+    settings.DEBUG = True
+    call_command("seed_demo")
+    call_command("seed_demo")  # idempotent
+    from apps.storage.models import BusinessRecord
+
+    assert BusinessRecord.objects.filter(table_id=SALES).count() == 3

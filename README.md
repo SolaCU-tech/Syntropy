@@ -8,11 +8,20 @@ The single source of truth for what to build is [`docs/syntropy-spec.md`](docs/s
 
 ## Status
 
-**Phase 2 — Storage.** Business records as JSONB rows with links in a relational link table,
+**Phase 3 — Workspace UI.** The app shell with the nine-item navigation, sign-in, the tables
+index, an SSD-driven table view (search, filter chips, server-side sorting and pages), record
+pages with linked records, and generated forms with link pickers that can create a linked
+record inline. Offline entry: the app installs as a PWA and opens with no connection, reads
+come from an IndexedDB cache, and creates and edits go through a sync queue
+(`POST /api/workspaces/{id}/sync/`) with idempotency keys, conflicts the user resolves, and
+rejections the user fixes. Exit gate: sync tests pass (backend adversarial tests and the
+Playwright offline journeys).
+
+Phase 2 — Storage. Business records as JSONB rows with links in a relational link table,
 workspace- and table-scoped foreign keys, a unique-value registry, delete policies,
 optimistic concurrency and a records API, with adversarial and concurrency tests. Exit gate:
 the JSONB vs physical-tables benchmark, done. See
-[`docs/storage-decision.md`](docs/storage-decision.md).
+[`docs/storage-decision.md`](docs/storage-decision.md). Passed its gate.
 
 Phase 1 — Schema registry. SSD v1 as Pydantic models with an exported JSON Schema; a
 versioned registry with immutable published snapshots; organizations, workspaces,
@@ -54,14 +63,17 @@ pip install -r requirements-dev.txt
 Copy-Item .env.example .env
 python manage.py migrate
 python manage.py createsuperuser   # optional, for /admin
-python manage.py seed_retail_example <your-username>   # optional example workspace
+python manage.py seed_demo         # demo user "demo" / "demo-pass-1" with the example shop
 python manage.py runserver         # http://localhost:8000/api/health/
 
 # 3. Frontend (in a second terminal)
 cd frontend
 npm install
-npm run dev                        # http://localhost:5173
+npm run dev                        # http://localhost:5173, sign in as demo
 ```
+
+`seed_demo` only runs with `DJANGO_DEBUG=true` (the `.env.example` default). To add the
+example workspace to your own user instead, run `python manage.py seed_retail_example <username>`.
 
 If PowerShell refuses to run `Activate.ps1`, run
 `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once.
@@ -88,7 +100,17 @@ npm run lint
 npm run typecheck
 npm test
 npm run build
+
+# End-to-end, offline journeys included (from frontend/). Needs the backend running with
+# seed_demo, and the built app served on port 4173:
+npm run build; npx vite preview --port 4173   # second terminal
+npx playwright install chromium               # first time only
+npm run e2e
 ```
+
+Offline behaviour needs the built app (`npm run build` then `vite preview`): the service
+worker that makes the app open offline is not active in `npm run dev`. In Chrome DevTools,
+Network > Offline simulates losing the connection.
 
 ## Storage benchmark
 
