@@ -20,6 +20,9 @@ node_modules/
 frontend/dist/
 *.tsbuildinfo
 coverage/
+frontend/test-results/
+frontend/playwright-report/
+frontend/dev-dist/
 
 # Editors and OS
 .vscode/*

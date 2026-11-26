@@ -62,6 +62,19 @@ class RecordDeletedSerializer(serializers.Serializer):
 
 
 class RecordPageSerializer(serializers.Serializer):
+    count = serializers.IntegerField(help_text="Records matching the filters, on all pages.")
     next = serializers.URLField(allow_null=True, help_text="The next page, or null.")
     previous = serializers.URLField(allow_null=True, help_text="The previous page, or null.")
     results = RecordSerializer(many=True)
+
+
+class TableSummarySerializer(serializers.Serializer):
+    table_id = serializers.CharField()
+    record_count = serializers.IntegerField()
+    last_updated = serializers.DateTimeField(allow_null=True)
+
+
+class LookupItemSerializer(serializers.Serializer):
+    id = serializers.UUIDField()
+    title = serializers.CharField(allow_null=True, help_text="The title field, or null.")
+    version = serializers.IntegerField()

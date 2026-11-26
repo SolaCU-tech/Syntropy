@@ -405,7 +405,7 @@ Staff can create and edit records through forms with no connection; changes queu
 2. A new record gets a client-generated UUID (UUIDv7) so links between offline-created records work before sync.
 3. Every change becomes a queued operation with an idempotency key, the base record version (for edits) and the schema version it was made against.
 4. On reconnect (and periodically), the queue uploads as a batch to `POST /sync/`. The server validates each operation fully, applies it transactionally, and returns per-operation results. Retries never duplicate (idempotency keys).
-5. Results: **applied** (removed from queue), **conflict** (record changed on the server since; the user sees both versions and chooses), **rejected** (for example a duplicate unique value or a deleted linked record; the user fixes and resubmits), **schema changed** (the form is re-validated against the new version).
+5. Results: **applied** (removed from queue), **conflict** (record changed on the server since; the user sees both versions and chooses; Agreed 26 Nov 2026), **rejected** (for example a duplicate unique value or a deleted linked record; the user fixes and resubmits), **schema changed** (the form is re-validated against the new version).
 
 **UX**
 
@@ -790,7 +790,7 @@ The storage benchmark and the AI provider check are the two open items that bloc
 | AI provider | Verify Gemini API tier, cost, rate limits, privacy terms and a fallback model | Phase 4 |
 | Review confidence threshold | Set the QA confidence level that turns an item into "must decide" | Phase 4 |
 | Workspace permissions | Confirm the RBAC matrix in section 5; report and form sharing rules | Phase 5 |
-| Offline conflict policy | Confirm "user chooses" for edit conflicts; decide whether offline deletes are ever allowed | Phase 3 |
+| Offline conflict policy | Agreed 26 Nov 2026: the user chooses when an offline edit conflicts (both versions shown); deletes are never queued offline and always need a connection | Phase 3 (done) |
 | Google sign-in | Include in MVP or email-only first | Phase 5 |
 | Logo and final brand | Teal is agreed "for now"; design the logo mark | Before public launch |
 | Pricing | Free trial, workspace quotas, per-import AI budget, paid tiers in naira | Before public launch |

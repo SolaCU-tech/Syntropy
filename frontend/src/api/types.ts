@@ -4,6 +4,55 @@
  */
 
 export interface paths {
+    "/api/auth/login/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["auth_login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/logout/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["auth_logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/session/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Who is signed in. Also sets the CSRF cookie the app sends back on every change. */
+        get: operations["auth_session"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health/": {
         parameters: {
             query?: never;
@@ -73,6 +122,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/workspaces/{workspace_id}/sync/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Upload a batch of changes queued on a device while it was offline. */
+        post: operations["sync_upload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/workspaces/{workspace_id}/tables/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Record count and last change for every table in the active schema (Tables index). */
+        get: operations["tables_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/workspaces/{workspace_id}/tables/{table_id}/lookup/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description IDs and titles of a table's records, for link pickers and the offline cache. */
+        get: operations["records_lookup"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/workspaces/{workspace_id}/tables/{table_id}/records/": {
         parameters: {
             query?: never;
@@ -80,10 +180,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Browse a table's records (newest first) and create new ones. */
+        /** @description Browse a table's records (newest first unless sorted) and create new ones. */
         get: operations["records_list"];
         put?: never;
-        /** @description Browse a table's records (newest first) and create new ones. */
+        /** @description Browse a table's records (newest first unless sorted) and create new ones. */
         post: operations["records_create"];
         delete?: never;
         options?: never;
@@ -234,6 +334,23 @@ export interface components {
          * @enum {string}
          */
         LogicalType: "text" | "integer" | "decimal" | "boolean" | "date" | "datetime" | "enum" | "reference";
+        LoginRequest: {
+            username: string;
+            password: string;
+        };
+        LookupItem: {
+            /** Format: uuid */
+            id: string;
+            /** @description The title field, or null. */
+            title: string | null;
+            version: number;
+        };
+        /**
+         * @description * `create` - create
+         *     * `update` - update
+         * @enum {string}
+         */
+        OpEnum: "create" | "update";
         /** @enum {string} */
         OriginEnum: "manual" | "ai" | "import";
         PatchedRecordUpdateRequest: {
@@ -313,6 +430,8 @@ export interface components {
             deleted: string[];
         };
         RecordPage: {
+            /** @description Records matching the filters, on all pages. */
+            count: number;
             /**
              * Format: uri
              * @description The next page, or null.
@@ -403,6 +522,10 @@ export interface components {
         };
         /** @enum {string} */
         SSDStatusEnum: "draft" | "published" | "superseded";
+        Session: {
+            authenticated: boolean;
+            user: components["schemas"]["User"] | null;
+        };
         /**
          * SourceMapping
          * @description Links one column of an uploaded file to a field (spec section 8).
@@ -426,6 +549,68 @@ export interface components {
             /** @default none */
             transform: components["schemas"]["Transform"];
         };
+        SyncBatchRequest: {
+            operations: components["schemas"]["SyncOperationRequest"][];
+        };
+        SyncError: {
+            code: string;
+            message: string;
+            details?: {
+                [key: string]: string[];
+            };
+        };
+        SyncOperationRequest: {
+            /**
+             * Format: uuid
+             * @description Generated once on the device when the change is queued; reused on retries.
+             */
+            idempotency_key: string;
+            /**
+             * @description Deletes always need a connection, so they are never queued.
+             *
+             *     * `create` - create
+             *     * `update` - update
+             */
+            op: components["schemas"]["OpEnum"];
+            table_id: string;
+            /**
+             * Format: uuid
+             * @description For a create, the client-generated ID (UUIDv7) the device already uses.
+             */
+            record_id: string;
+            /** @description For an update: the record version the change was based on. */
+            base_version?: number;
+            /** @description The schema version the form was validated against. */
+            schema_version: number;
+            values: {
+                [key: string]: unknown | null;
+            };
+        };
+        SyncResponse: {
+            /** @description The workspace's active schema version. */
+            schema_version: number;
+            results: components["schemas"]["SyncResult"][];
+        };
+        SyncResult: {
+            /** Format: uuid */
+            idempotency_key: string;
+            status: components["schemas"]["SyncResultStatusEnum"];
+            /** @description True when this key was seen before and the stored outcome is returned. */
+            replayed: boolean;
+            /** @description The saved record (applied). */
+            record?: components["schemas"]["Record"];
+            /** @description The record as it is now on the server (conflict). */
+            current?: components["schemas"]["Record"];
+            error?: components["schemas"]["SyncError"];
+        };
+        /**
+         * @description * `applied` - applied
+         *     * `conflict` - conflict
+         *     * `rejected` - rejected
+         *     * `schema_changed` - schema_changed
+         * @enum {string}
+         */
+        SyncResultStatusEnum: "applied" | "conflict" | "rejected" | "schema_changed";
         /** Table */
         Table: {
             /** Id */
@@ -447,12 +632,24 @@ export interface components {
             /** Fields */
             fields: components["schemas"]["FieldDef"][];
         };
+        TableSummary: {
+            table_id: string;
+            record_count: number;
+            /** Format: date-time */
+            last_updated: string | null;
+        };
         /**
          * Transform
          * @description Deterministic transforms applied to a source value during import (Phase 4).
          * @enum {string}
          */
         Transform: "none" | "trim" | "parse_integer" | "parse_decimal" | "parse_money" | "parse_date_day_first" | "parse_date_month_first" | "parse_datetime" | "parse_boolean" | "enum_lookup" | "link_lookup";
+        User: {
+            id: number;
+            username: string;
+            first_name: string;
+            email: string;
+        };
         Workspace: {
             /** Format: uuid */
             readonly id: string;
@@ -486,6 +683,76 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    auth_login: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["LoginRequest"];
+                "multipart/form-data": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Session"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    auth_logout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    auth_session: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Session"];
+                };
+            };
+        };
+    };
     health_check: {
         parameters: {
             query?: never;
@@ -599,13 +866,126 @@ export interface operations {
             };
         };
     };
+    sync_upload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SyncBatchRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["SyncBatchRequest"];
+                "multipart/form-data": components["schemas"]["SyncBatchRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncResponse"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    tables_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TableSummary"][];
+                };
+            };
+        };
+    };
+    records_lookup: {
+        parameters: {
+            query?: {
+                /** @description Up to 5000; default 50. */
+                limit?: number;
+                /** @description Text to find in the text fields. */
+                search?: string;
+            };
+            header?: never;
+            path: {
+                table_id: string;
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LookupItem"][];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
     records_list: {
         parameters: {
             query?: {
-                /** @description From the previous page's next link. */
-                cursor?: string;
+                /** @description JSON filter tree: {"all": [{"field": "fld_x", "op": "gte", "value": "1000"}]}. Operators depend on the field type. */
+                filter?: string;
+                /** @description A field ID, created_at or updated_at; prefix - for descending. */
+                ordering?: string;
+                /** @description Page number, from 1. */
+                page?: number;
                 /** @description Up to 200; default 50. */
                 page_size?: number;
+                /** @description Text to find in the text fields. */
+                search?: string;
             };
             header?: never;
             path: {
@@ -622,6 +1002,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RecordPage"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
                 };
             };
             404: {
