@@ -1,4 +1,5 @@
 from django.db import connection
+from django.http import JsonResponse
 from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import serializers
 from rest_framework.permissions import AllowAny
@@ -34,3 +35,14 @@ class HealthView(APIView):
         return Response(
             {"status": status, "database": database}, status=200 if status == "ok" else 503
         )
+
+
+def csrf_failure(request, reason: str = "") -> JsonResponse:
+    """Django's CSRF rejections in the API's error shape, so the app can show them plainly."""
+    return JsonResponse(
+        {
+            "code": "csrf_failed",
+            "message": "Your session expired. Reload the page and try again.",
+        },
+        status=403,
+    )

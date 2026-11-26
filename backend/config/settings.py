@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "apps.tenancy",
     "apps.schema_registry",
     "apps.storage",
+    "apps.sync",
 ]
 
 MIDDLEWARE = [
@@ -100,6 +101,7 @@ SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
+CSRF_FAILURE_VIEW = "apps.core.views.csrf_failure"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [

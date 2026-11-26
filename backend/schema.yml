@@ -5,6 +5,66 @@ info:
   description: Syntropy backend API. The frontend generates its TypeScript types from
     this.
 paths:
+  /api/auth/login/:
+    post:
+      operationId: auth_login
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/auth/logout/:
+    post:
+      operationId: auth_logout
+      tags:
+      - auth
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/auth/session/:
+    get:
+      operationId: auth_session
+      description: Who is signed in. Also sets the CSRF cookie the app sends back
+        on every change.
+      tags:
+      - auth
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          description: ''
   /api/health/:
     get:
       operationId: health_check
@@ -116,21 +176,161 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: ''
+  /api/workspaces/{workspace_id}/sync/:
+    post:
+      operationId: sync_upload
+      description: Upload a batch of changes queued on a device while it was offline.
+      parameters:
+      - in: path
+        name: workspace_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - workspaces
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyncBatchRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SyncBatchRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SyncBatchRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/workspaces/{workspace_id}/tables/:
+    get:
+      operationId: tables_list
+      description: Record count and last change for every table in the active schema
+        (Tables index).
+      parameters:
+      - in: path
+        name: workspace_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - workspaces
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TableSummary'
+          description: ''
+  /api/workspaces/{workspace_id}/tables/{table_id}/lookup/:
+    get:
+      operationId: records_lookup
+      description: IDs and titles of a table's records, for link pickers and the offline
+        cache.
+      parameters:
+      - in: query
+        name: limit
+        schema:
+          type: integer
+        description: Up to 5000; default 50.
+      - in: query
+        name: search
+        schema:
+          type: string
+        description: Text to find in the text fields.
+      - in: path
+        name: table_id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - workspaces
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LookupItem'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
   /api/workspaces/{workspace_id}/tables/{table_id}/records/:
     get:
       operationId: records_list
-      description: Browse a table's records (newest first) and create new ones.
+      description: Browse a table's records (newest first unless sorted) and create
+        new ones.
       parameters:
       - in: query
-        name: cursor
+        name: filter
         schema:
           type: string
-        description: From the previous page's next link.
+        description: 'JSON filter tree: {"all": [{"field": "fld_x", "op": "gte", "value":
+          "1000"}]}. Operators depend on the field type.'
+      - in: query
+        name: ordering
+        schema:
+          type: string
+        description: A field ID, created_at or updated_at; prefix - for descending.
+      - in: query
+        name: page
+        schema:
+          type: integer
+        description: Page number, from 1.
       - in: query
         name: page_size
         schema:
           type: integer
         description: Up to 200; default 50.
+      - in: query
+        name: search
+        schema:
+          type: string
+        description: Text to find in the text fields.
       - in: path
         name: table_id
         schema:
@@ -153,6 +353,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/RecordPage'
           description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
         '404':
           content:
             application/json:
@@ -161,7 +367,8 @@ paths:
           description: ''
     post:
       operationId: records_create
-      description: Browse a table's records (newest first) and create new ones.
+      description: Browse a table's records (newest first unless sorted) and create
+        new ones.
       parameters:
       - in: path
         name: table_id
@@ -578,6 +785,45 @@ components:
       - reference
       title: LogicalType
       type: string
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 1
+          maxLength: 150
+        password:
+          type: string
+          minLength: 1
+          maxLength: 256
+      required:
+      - password
+      - username
+    LookupItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type:
+          - string
+          - 'null'
+          description: The title field, or null.
+        version:
+          type: integer
+      required:
+      - id
+      - title
+      - version
+    OpEnum:
+      enum:
+      - create
+      - update
+      type: string
+      description: |-
+        * `create` - create
+        * `update` - update
     OriginEnum:
       enum:
       - manual
@@ -726,6 +972,9 @@ components:
     RecordPage:
       type: object
       properties:
+        count:
+          type: integer
+          description: Records matching the filters, on all pages.
         next:
           type:
           - string
@@ -743,6 +992,7 @@ components:
           items:
             $ref: '#/components/schemas/Record'
       required:
+      - count
       - next
       - previous
       - results
@@ -871,6 +1121,18 @@ components:
       - published
       - superseded
       type: string
+    Session:
+      type: object
+      properties:
+        authenticated:
+          type: boolean
+        user:
+          oneOf:
+          - $ref: '#/components/schemas/User'
+          - type: 'null'
+      required:
+      - authenticated
+      - user
     SourceMapping:
       additionalProperties: false
       description: Links one column of an uploaded file to a field (spec section 8).
@@ -916,6 +1178,128 @@ components:
       - field
       title: SourceMapping
       type: object
+    SyncBatchRequest:
+      type: object
+      properties:
+        operations:
+          type: array
+          items:
+            $ref: '#/components/schemas/SyncOperationRequest'
+      required:
+      - operations
+    SyncError:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+      required:
+      - code
+      - message
+    SyncOperationRequest:
+      type: object
+      properties:
+        idempotency_key:
+          type: string
+          format: uuid
+          description: Generated once on the device when the change is queued; reused
+            on retries.
+        op:
+          allOf:
+          - $ref: '#/components/schemas/OpEnum'
+          description: |-
+            Deletes always need a connection, so they are never queued.
+
+            * `create` - create
+            * `update` - update
+        table_id:
+          type: string
+          minLength: 1
+          pattern: ^tbl_[a-z0-9_]{3,48}$
+        record_id:
+          type: string
+          format: uuid
+          description: For a create, the client-generated ID (UUIDv7) the device already
+            uses.
+        base_version:
+          type: integer
+          minimum: 1
+          description: 'For an update: the record version the change was based on.'
+        schema_version:
+          type: integer
+          minimum: 1
+          description: The schema version the form was validated against.
+        values:
+          type: object
+          additionalProperties:
+            oneOf:
+            - {}
+            - type: 'null'
+      required:
+      - idempotency_key
+      - op
+      - record_id
+      - schema_version
+      - table_id
+      - values
+    SyncResponse:
+      type: object
+      properties:
+        schema_version:
+          type: integer
+          description: The workspace's active schema version.
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SyncResult'
+      required:
+      - results
+      - schema_version
+    SyncResult:
+      type: object
+      properties:
+        idempotency_key:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/SyncResultStatusEnum'
+        replayed:
+          type: boolean
+          description: True when this key was seen before and the stored outcome is
+            returned.
+        record:
+          allOf:
+          - $ref: '#/components/schemas/Record'
+          description: The saved record (applied).
+        current:
+          allOf:
+          - $ref: '#/components/schemas/Record'
+          description: The record as it is now on the server (conflict).
+        error:
+          $ref: '#/components/schemas/SyncError'
+      required:
+      - idempotency_key
+      - replayed
+      - status
+    SyncResultStatusEnum:
+      enum:
+      - applied
+      - conflict
+      - rejected
+      - schema_changed
+      type: string
+      description: |-
+        * `applied` - applied
+        * `conflict` - conflict
+        * `rejected` - rejected
+        * `schema_changed` - schema_changed
     Table:
       additionalProperties: false
       properties:
@@ -962,6 +1346,22 @@ components:
       - fields
       title: Table
       type: object
+    TableSummary:
+      type: object
+      properties:
+        table_id:
+          type: string
+        record_count:
+          type: integer
+        last_updated:
+          type:
+          - string
+          - 'null'
+          format: date-time
+      required:
+      - last_updated
+      - record_count
+      - table_id
     Transform:
       description: Deterministic transforms applied to a source value during import
         (Phase 4).
@@ -979,6 +1379,22 @@ components:
       - link_lookup
       title: Transform
       type: string
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        first_name:
+          type: string
+        email:
+          type: string
+      required:
+      - email
+      - first_name
+      - id
+      - username
     Workspace:
       type: object
       properties:
