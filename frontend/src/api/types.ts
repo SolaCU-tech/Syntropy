@@ -73,6 +73,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/workspaces/{workspace_id}/tables/{table_id}/records/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Browse a table's records (newest first) and create new ones. */
+        get: operations["records_list"];
+        put?: never;
+        /** @description Browse a table's records (newest first) and create new ones. */
+        post: operations["records_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/workspaces/{workspace_id}/tables/{table_id}/records/{record_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Read, edit or delete one record. */
+        get: operations["records_retrieve"];
+        put?: never;
+        post?: never;
+        /** @description Read, edit or delete one record. */
+        delete: operations["records_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Read, edit or delete one record. */
+        patch: operations["records_partial_update"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -199,6 +236,14 @@ export interface components {
         LogicalType: "text" | "integer" | "decimal" | "boolean" | "date" | "datetime" | "enum" | "reference";
         /** @enum {string} */
         OriginEnum: "manual" | "ai" | "import";
+        PatchedRecordUpdateRequest: {
+            /** @description The version you last read. A stale version returns 409. */
+            version?: number;
+            /** @description Values keyed by SSD field ID. Decimals are strings ("1500.00"), dates are "YYYY-MM-DD", datetimes are ISO 8601 in UTC, and a reference field holds the linked record's ID. Only the fields sent change; null clears a field. */
+            values?: {
+                [key: string]: unknown | null;
+            };
+        };
         /**
          * Provenance
          * @description Where a field came from: who proposed it and from which source column.
@@ -224,6 +269,61 @@ export interface components {
              * @default null
              */
             note: string | null;
+        };
+        Record: {
+            /** Format: uuid */
+            id: string;
+            table_id: string;
+            /** @description Send this back when editing the record. */
+            version: number;
+            /** @description The schema version the record was last written against. */
+            schema_version: number;
+            /** @description Values keyed by SSD field ID. Decimals are strings ("1500.00"), dates are "YYYY-MM-DD", datetimes are ISO 8601 in UTC, and a reference field holds the linked record's ID. */
+            values: {
+                [key: string]: unknown | null;
+            };
+            created_by: number | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        RecordConflict: {
+            code: string;
+            message: string;
+            details?: {
+                [key: string]: unknown;
+            };
+            /** @description The record as it is now on the server. */
+            current: components["schemas"]["Record"];
+        };
+        RecordCreateRequest: {
+            /**
+             * Format: uuid
+             * @description Optional client-generated ID (UUIDv7 from offline devices).
+             */
+            id?: string;
+            /** @description Values keyed by SSD field ID. Decimals are strings ("1500.00"), dates are "YYYY-MM-DD", datetimes are ISO 8601 in UTC, and a reference field holds the linked record's ID. */
+            values: {
+                [key: string]: unknown | null;
+            };
+        };
+        RecordDeleted: {
+            /** @description Every record removed, including any removed by a cascade. */
+            deleted: string[];
+        };
+        RecordPage: {
+            /**
+             * Format: uri
+             * @description The next page, or null.
+             */
+            next: string | null;
+            /**
+             * Format: uri
+             * @description The previous page, or null.
+             */
+            previous: string | null;
+            results: components["schemas"]["Record"][];
         };
         /**
          * Relationship
@@ -495,6 +595,228 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    records_list: {
+        parameters: {
+            query?: {
+                /** @description From the previous page's next link. */
+                cursor?: string;
+                /** @description Up to 200; default 50. */
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                table_id: string;
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecordPage"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    records_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                table_id: string;
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordCreateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["RecordCreateRequest"];
+                "multipart/form-data": components["schemas"]["RecordCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Record"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    records_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                record_id: string;
+                table_id: string;
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Record"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    records_destroy: {
+        parameters: {
+            query?: {
+                /** @description If sent, a stale version returns 409. */
+                version?: number;
+            };
+            header?: never;
+            path: {
+                record_id: string;
+                table_id: string;
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecordDeleted"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    records_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                record_id: string;
+                table_id: string;
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedRecordUpdateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedRecordUpdateRequest"];
+                "multipart/form-data": components["schemas"]["PatchedRecordUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Record"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Stale version (with the current record) or a duplicate value. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecordConflict"];
                 };
             };
         };

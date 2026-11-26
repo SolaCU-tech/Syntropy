@@ -88,8 +88,8 @@ ADR-01 to ADR-14 come from the SRS; ADR-15 onward were added on 24 November 2026
 | ADR-05 | Independent generation QA, separate from recommendation/adaptation | Agreed |
 | ADR-06 | AI-adaptive schemas: AI proposes, business approves, backend validates and executes | Agreed |
 | ADR-07 | Versioned, storage-independent logical schema spec (SSD) and registry | Agreed direction |
-| ADR-08 | JSONB business records plus native relational metadata and links for the first prototype | Provisional; integrity and performance tests required |
-| ADR-09 | Dynamic physical tables / schema-per-tenant kept as an alternative | Under evaluation |
+| ADR-08 | JSONB business records plus native relational metadata and links for the first prototype | Agreed for the MVP (24 Nov 2026, after the Phase 2 benchmark; `docs/storage-decision.md`), with a database trigger that checks types and required fields against the published schema. Was Provisional |
+| ADR-09 | Dynamic physical tables / schema-per-tenant kept as an alternative | Fallback behind the storage adapter; benchmarked faster but not adopted for the MVP; revisit at Phase 5 (`docs/storage-decision.md`). Was Under evaluation |
 | ADR-10 | Modular Django monolith plus async workers; no premature microservices | Recommended baseline |
 | ADR-11 | Gemini API as candidate provider; a consumer subscription does not cover API use | Candidate; verify pricing and terms |
 | ADR-12 | Django ORM for platform entities; storage adapter for dynamic business records | Recommended baseline |
@@ -263,9 +263,9 @@ The SSD is the canonical, versioned JSON description of a workspace's structure,
 
 ## 9. Data storage, integrity and indexing
 
-The first prototype stores business records as JSONB rows with relational link rows (ADR-08, Provisional), behind a storage adapter that can later switch to real per-tenant tables.
+The first prototype stores business records as JSONB rows with relational link rows (ADR-08, agreed for the MVP after the Phase 2 benchmark), behind a storage adapter that can later switch to real per-tenant tables.
 
-**Provisional JSONB-relational hybrid** (SRS §7.1). Platform metadata lives in ordinary tables. Each business record is one row in a shared `business_records` table: immutable record UUID, `workspace_id`, logical `table_id`, JSONB scalar values, version number and timestamps. Links live authoritatively in a relational `record_relationships` table. Never store a whole business database as one JSON document.
+**JSONB-relational hybrid** (SRS §7.1). Platform metadata lives in ordinary tables. Each business record is one row in a shared `business_records` table: immutable record UUID, `workspace_id`, logical `table_id`, JSONB scalar values, version number and timestamps. Links live authoritatively in a relational `record_relationships` table. Never store a whole business database as one JSON document.
 
 **Core entities** (SRS §7.2): organizations, memberships, workspaces, schema\_versions, logical\_tables, field\_definitions, relationship\_definitions, business\_records, record\_relationships, unique\_values (if the registry approach is chosen), source\_files, import\_jobs, import\_mappings, query\_definitions, report\_definitions, form\_definitions, schema\_change\_proposals, audit\_events. New for this design: insight\_definitions, dashboards, review\_items (uncertainties awaiting a decision), sync\_batches (offline uploads, with idempotency keys), notifications.
 
@@ -759,9 +759,9 @@ The storage benchmark and the AI provider check are the two open items that bloc
 
 | Item | Question / next action | Needed by |
 | --- | --- | --- |
-| Storage | Run the JSONB vs physical-tables benchmark; no production lock-in before it | Phase 2 |
-| Relationship representation | Finalize link-table keys, cardinality and database-side enforcement | Phase 2 |
-| Unique constraints | Expression indexes, unique-value registry or hybrid; must survive offline sync | Phase 2 |
+| Storage | Benchmark run 24 Nov 2026: both designs pass correctness; physical is 2–9x faster on reports; JSONB agreed for the MVP with database type checks (`docs/storage-decision.md`) | Phase 2 (done) |
+| Relationship representation | Done: one link row per source record and relationship, partial unique index for one_to_one, composite (workspace, table, record) foreign keys, RESTRICT in the database | Phase 2 (done) |
+| Unique constraints | Done: unique-value registry with a unique index and INSERT … ON CONFLICT claims; text ignores case and extra spaces | Phase 2 (done) |
 | AI provider | Verify Gemini API tier, cost, rate limits, privacy terms and a fallback model | Phase 4 |
 | Review confidence threshold | Set the QA confidence level that turns an item into "must decide" | Phase 4 |
 | Workspace permissions | Confirm the RBAC matrix in section 5; report and form sharing rules | Phase 5 |

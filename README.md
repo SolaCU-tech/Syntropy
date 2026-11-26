@@ -8,10 +8,16 @@ The single source of truth for what to build is [`docs/syntropy-spec.md`](docs/s
 
 ## Status
 
-**Phase 1 — Schema registry.** SSD v1 as Pydantic models with an exported JSON Schema; a
+**Phase 2 — Storage.** Business records as JSONB rows with links in a relational link table,
+workspace- and table-scoped foreign keys, a unique-value registry, delete policies,
+optimistic concurrency and a records API, with adversarial and concurrency tests. Exit gate:
+the JSONB vs physical-tables benchmark, done. See
+[`docs/storage-decision.md`](docs/storage-decision.md).
+
+Phase 1 — Schema registry. SSD v1 as Pydantic models with an exported JSON Schema; a
 versioned registry with immutable published snapshots; organizations, workspaces,
 memberships and the workspace resolver; the hand-written retail SSD. Exit gate: retail SSD
-valid. See [`docs/ssd.md`](docs/ssd.md).
+valid. See [`docs/ssd.md`](docs/ssd.md). Passed its gate.
 
 Phase 0 (foundation: monorepo, Compose, CI, test harness, design tokens) passed its gate.
 
@@ -83,6 +89,15 @@ npm run typecheck
 npm test
 npm run build
 ```
+
+## Storage benchmark
+
+```powershell
+cd backend;  python manage.py run_storage_benchmark   # about a minute; --quick for a smoke run
+```
+
+It creates and drops its own throwaway database (your dev data is untouched) and rewrites
+[`docs/benchmarks/storage-benchmark.md`](docs/benchmarks/storage-benchmark.md).
 
 ## API types
 
